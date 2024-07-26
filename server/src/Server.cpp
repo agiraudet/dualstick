@@ -53,6 +53,7 @@ void Server::run() {
         _handleDisconnect(event);
         break;
       default:
+        std::cout << "WEIRD " << event.type << std::endl;
         break;
       }
     }
@@ -71,7 +72,17 @@ void Server::_handleConnect(ENetEvent &event) {
   MessagePlayerCo msg = {newUser.getId()};
   ENetPacket *packet = packageMessage(msg, PLR_CO);
   _distributeToOther(newUser.getId(), packet);
-  enet_packet_destroy(packet);
+  MessagePlayerID msgId = {newUser.getId()};
+  ENetPacket *packetId = packageMessage(msgId, PLR_ID);
+  newUser.send(packetId);
+  // need to list all the already there users
+  /*for (const auto &u : _users) {*/
+  /*  if (u.second.getId() != newUser.getId()) {*/
+  /**/
+  /*  }*/
+  /*}*/
+
+  /*enet_packet_destroy(packet);*/
 }
 
 void Server::_handleReceive(ENetEvent &event) {
@@ -81,8 +92,8 @@ void Server::_handleReceive(ENetEvent &event) {
   ENetPacket *pck = enet_packet_create(
       event.packet->data, event.packet->dataLength, ENET_PACKET_FLAG_RELIABLE);
   _distributeToOther(_users[event.peer].getId(), pck);
-  enet_packet_destroy(event.packet);
-  enet_packet_destroy(pck);
+  /*enet_packet_destroy(event.packet);*/
+  /*enet_packet_destroy(pck);*/
   /*if (_users.find(event.peer) != _users.end()) {*/
   /*  _users[event.peer].send("Message received");*/
   /*}*/
@@ -95,7 +106,7 @@ void Server::_handleDisconnect(ENetEvent &event) {
   MessagePlayerDisco msg = {userId};
   ENetPacket *packet = packageMessage(msg, PLR_DISCO);
   _distributeToAll(packet);
-  enet_packet_destroy(packet);
+  /*enet_packet_destroy(packet);*/
 }
 
 void Server::_distributeToOther(int authorId, ENetPacket *packet) {

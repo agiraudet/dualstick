@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL_keycode.h>
 #include <enet/enet.h>
+#include <iostream>
 
 Engine::Engine(void)
     : _client(Client()), _alive(true), _window(nullptr), _renderer(nullptr) {
@@ -28,6 +29,8 @@ void Engine::run(void) {
   }
 }
 
+void Engine::setPlayerId(int id) { _player.setId(id); }
+
 void Engine::removePlayer(int id) {
   if (_otherPlayers.find(id) != _otherPlayers.end()) {
     _otherPlayers.erase(id);
@@ -39,13 +42,17 @@ void Engine::addPlayer(int id) {
     _otherPlayers.erase(id);
   }
   _otherPlayers[id] = Player(id);
+  std::cout << "added player " << id << std::endl;
 }
 
 void Engine::updatePlayer(int id, SDL_Rect &rect) {
+  std::cout << "update player " << id << std::endl;
   std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
-  if (it != _otherPlayers.end()) {
-    it->second.updateRect(rect);
-  }
+  if (it == _otherPlayers.end() && id != _player.getId())
+    addPlayer(id);
+  it = _otherPlayers.find(id);
+  if (it != _otherPlayers.end())
+    _otherPlayers[id].updateRect(rect);
 }
 
 void Engine::_getEvent(void) {

@@ -7,7 +7,7 @@
 
 #define MESSAGE_VERSION 1
 
-enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE };
+enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID };
 
 struct MessageHeader {
   MessageType type;
@@ -25,6 +25,10 @@ struct MessagePlayerDisco {
 struct MessagePlayerUpdate {
   int id;
   SDL_Rect rect;
+};
+
+struct MessagePlayerID {
+  int id;
 };
 
 template <typename T>

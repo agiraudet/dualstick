@@ -19,6 +19,7 @@ public:
   ~Engine(void);
 
   void run(void);
+  void setPlayerId(int id);
   void removePlayer(int id);
   void addPlayer(int id);
   void updatePlayer(int id, SDL_Rect &rect);

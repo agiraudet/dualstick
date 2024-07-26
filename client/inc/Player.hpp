@@ -15,6 +15,7 @@ public:
   void move(int dx, int dy);
   void updateRect(SDL_Rect &rect);
   SDL_Rect const &getRect(void) const;
+  void setId(int id);
   int getId(void) const;
 
 private:

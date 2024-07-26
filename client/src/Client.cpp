@@ -84,7 +84,7 @@ void Client::sendMessage(ENetPacket *packet) {
   if (_peer != nullptr) {
     enet_peer_send(_peer, 0, packet);
   }
-  enet_host_flush(_client);
+  /*enet_host_flush(_client);*/
 }
 
 void Client::_handleReceive(ENetEvent &event, Engine &eng) {
@@ -111,6 +111,12 @@ void Client::_handleReceive(ENetEvent &event, Engine &eng) {
     MessagePlayerUpdate msgUpdate = deserializeMessage<MessagePlayerUpdate>(
         (const char *)event.packet->data);
     eng.updatePlayer(msgUpdate.id, msgUpdate.rect);
+    break;
+  }
+  case PLR_ID: {
+    MessagePlayerID msgID =
+        deserializeMessage<MessagePlayerID>((const char *)event.packet->data);
+    eng.setPlayerId(msgID.id);
     break;
   }
   default:
