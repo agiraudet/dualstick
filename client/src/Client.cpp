@@ -1,6 +1,8 @@
 #include <cstring>
+#include <enet/enet.h>
 #include <iostream>
 #include <stdexcept>
+#include <x86gprintrin.h>
 
 #include "Client.hpp"
 #include "Engine.hpp"
@@ -52,12 +54,12 @@ void Client::deinit() {
   }
 }
 
-void Client::getEvent() {
+void Client::getEvent(Engine &eng) {
   ENetEvent event;
   while (enet_host_service(_client, &event, 0) > 0) {
     switch (event.type) {
     case ENET_EVENT_TYPE_RECEIVE:
-      _handleReceive(event);
+      _handleReceive(event, eng);
       enet_packet_destroy(event.packet);
       break;
     case ENET_EVENT_TYPE_DISCONNECT:
@@ -77,26 +79,41 @@ void Client::sendMessage(const std::string &message) {
   }
 }
 
+void Client::sendMessage(ENetPacket *packet) {
+  std::cout << "Sending stuff" << std::endl;
+  if (_peer != nullptr) {
+    enet_peer_send(_peer, 0, packet);
+  }
+  enet_host_flush(_client);
+}
+
 void Client::_handleReceive(ENetEvent &event, Engine &eng) {
   std::cout << "A packet of length " << event.packet->dataLength
             << " containing \"" << event.packet->data << "\" was received."
             << std::endl;
   MessageHeader msgHeader;
   memcpy(&msgHeader, event.packet->data, sizeof(MessageHeader));
+  std::cout << "msg Type: " << msgHeader.type << std::endl;
   switch (msgHeader.type) {
-  case PLR_CO:
+  case PLR_CO: {
     MessagePlayerCo msgCo =
         deserializeMessage<MessagePlayerCo>((const char *)event.packet->data);
     eng.addPlayer(msgCo.id);
     break;
-  case PLR_DISCO:
+  }
+  case PLR_DISCO: {
     MessagePlayerDisco msgDisco = deserializeMessage<MessagePlayerDisco>(
         (const char *)event.packet->data);
     eng.removePlayer(msgDisco.id);
     break;
-  case PLR_UPDATE:
+  }
+  case PLR_UPDATE: {
     MessagePlayerUpdate msgUpdate = deserializeMessage<MessagePlayerUpdate>(
         (const char *)event.packet->data);
     eng.updatePlayer(msgUpdate.id, msgUpdate.rect);
+    break;
+  }
+  default:
+    break;
   }
 }

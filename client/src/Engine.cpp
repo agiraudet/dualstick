@@ -1,7 +1,12 @@
 #include "Engine.hpp"
-#include <SDL2/SDL_keycode.h>
+#include "Message.hpp"
 
-Engine::Engine(void) : _alive(true), _window(nullptr), _renderer(nullptr) {
+#include <SDL2/SDL_keycode.h>
+#include <enet/enet.h>
+
+Engine::Engine(void)
+    : _client(Client()), _alive(true), _window(nullptr), _renderer(nullptr) {
+  _client.init("localhost", 1234);
   SDL_Init(SDL_INIT_VIDEO);
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, SCR_WIDTH, SCR_HEIGHT,
@@ -17,6 +22,7 @@ Engine::~Engine(void) {
 
 void Engine::run(void) {
   while (_alive) {
+    _client.getEvent(*this);
     _getEvent();
     _render();
   }
@@ -33,6 +39,13 @@ void Engine::addPlayer(int id) {
     _otherPlayers.erase(id);
   }
   _otherPlayers[id] = Player(id);
+}
+
+void Engine::updatePlayer(int id, SDL_Rect &rect) {
+  std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
+  if (it != _otherPlayers.end()) {
+    it->second.updateRect(rect);
+  }
 }
 
 void Engine::_getEvent(void) {
@@ -78,4 +91,8 @@ void Engine::_processInput(SDL_Keycode &sym) {
     break;
   }
   _player.move(dx, dy);
+  MessagePlayerUpdate msg = {_player.getId(), _player.getRect()};
+  ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
+  _client.sendMessage(pck);
+  /*enet_packet_destroy(pck);*/
 }

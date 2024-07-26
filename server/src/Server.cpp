@@ -40,7 +40,8 @@ void Server::deinit() {
 void Server::run() {
   ENetEvent event;
   while (true) {
-    while (enet_host_service(_server, &event, 1000) > 0) {
+    while (enet_host_service(_server, &event, 10) > 0) {
+      std::cout << event.type << std::endl;
       switch (event.type) {
       case ENET_EVENT_TYPE_CONNECT:
         _handleConnect(event);

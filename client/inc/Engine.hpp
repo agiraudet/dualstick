@@ -7,6 +7,7 @@
 #include <SDL2/SDL_video.h>
 #include <unordered_map>
 
+#include "Client.hpp"
 #include "Player.hpp"
 
 #define SCR_WIDTH 720
@@ -28,6 +29,7 @@ private:
   void _processInput(SDL_Keycode &sym);
 
 private:
+  Client _client;
   bool _alive;
   Player _player;
   std::unordered_map<int, Player> _otherPlayers;

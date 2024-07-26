@@ -13,13 +13,13 @@ public:
   ~Player(void);
 
   void move(int dx, int dy);
+  void updateRect(SDL_Rect &rect);
   SDL_Rect const &getRect(void) const;
-  t_msgplr const &getMsg(void);
+  int getId(void) const;
 
 private:
   int _id;
   SDL_Rect _rect;
-  t_msgplr _msg;
 };
 
 #endif

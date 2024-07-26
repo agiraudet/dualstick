@@ -1,5 +1,4 @@
 #include "Player.hpp"
-#include "msg.hpp"
 
 Player::Player(void) : _id(0), _rect({0, 0, 50, 50}) {}
 
@@ -16,10 +15,8 @@ void Player::move(int dx, int dy) {
   _rect.y += dy;
 }
 
+void Player::updateRect(SDL_Rect &rect) { _rect = rect; }
+
 SDL_Rect const &Player::getRect(void) const { return _rect; }
 
-t_msgplr const &Player::getMsg(void) {
-  _msg.rect = _rect;
-  _msg.id = _id;
-  return _msg;
-}
+int Player::getId(void) const { return _id; }
