@@ -27,7 +27,7 @@ public:
 private:
   void _getEvent(void);
   void _render(void);
-  void _processInput(SDL_Keycode &sym);
+  void _processInput(SDL_Keycode &sym, bool state);
 
 private:
   Client _client;

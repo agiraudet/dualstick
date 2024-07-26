@@ -1,6 +1,8 @@
 #include "Engine.hpp"
 #include "Message.hpp"
+#include "Timer.hpp"
 
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
 #include <enet/enet.h>
 #include <iostream>
@@ -22,10 +24,18 @@ Engine::~Engine(void) {
 }
 
 void Engine::run(void) {
+  TimerFps timerFps(30);
+
   while (_alive) {
     _client.getEvent(*this);
     _getEvent();
+    _player.applyInput();
+    MessagePlayerUpdate msg = {_player.getId(), _player.getRect()};
+    ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
+    _client.sendMessage(pck);
+    /*enet_packet_destroy(pck);*/
     _render();
+    timerFps.capFps();
   }
 }
 
@@ -35,6 +45,7 @@ void Engine::removePlayer(int id) {
   if (_otherPlayers.find(id) != _otherPlayers.end()) {
     _otherPlayers.erase(id);
   }
+  std::cout << "remove player " << id << std::endl;
 }
 
 void Engine::addPlayer(int id) {
@@ -60,12 +71,13 @@ void Engine::_getEvent(void) {
   while (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT)
       _alive = false;
-    else if (e.type == SDL_KEYDOWN)
-      _processInput(e.key.keysym.sym);
+    else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
+      _processInput(e.key.keysym.sym, (e.type == SDL_KEYDOWN));
   }
 }
 
 void Engine::_render(void) {
+  /*SDL_Rect rect;*/
   SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
   SDL_RenderClear(_renderer);
 
@@ -80,26 +92,19 @@ void Engine::_render(void) {
   SDL_RenderPresent(_renderer);
 }
 
-void Engine::_processInput(SDL_Keycode &sym) {
-  int dx = 0;
-  int dy = 0;
+void Engine::_processInput(SDL_Keycode &sym, bool state) {
   switch (sym) {
   case SDLK_UP:
-    dy = -10;
+    _player.setInput(UP, state);
     break;
   case SDLK_DOWN:
-    dy = 10;
+    _player.setInput(DOWN, state);
     break;
   case SDLK_LEFT:
-    dx = -10;
+    _player.setInput(LEFT, state);
     break;
   case SDLK_RIGHT:
-    dx = 10;
+    _player.setInput(RIGHT, state);
     break;
   }
-  _player.move(dx, dy);
-  MessagePlayerUpdate msg = {_player.getId(), _player.getRect()};
-  ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
-  _client.sendMessage(pck);
-  /*enet_packet_destroy(pck);*/
 }

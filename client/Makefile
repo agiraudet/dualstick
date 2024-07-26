@@ -11,6 +11,7 @@ SRCS_DIR	:=	./src
 SRCS			:=	Client.cpp \
 							Engine.cpp \
 							Player.cpp \
+							Timer.cpp \
 							main.cpp
 
 OBJS			:=	$(SRCS:%.cpp=$(BUILD_DIR)/%.o)

@@ -13,6 +13,7 @@ public:
 
   void init(const std::string &host, enet_uint16 port);
   void deinit();
+  void disconnect();
   void getEvent(Engine &eng);
   void sendMessage(const std::string &message);
   void sendMessage(ENetPacket *packet);

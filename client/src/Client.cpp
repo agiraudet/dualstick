@@ -15,7 +15,10 @@ Client::Client() : _client(nullptr), _peer(nullptr) {
   atexit(enet_deinitialize);
 }
 
-Client::~Client() { deinit(); }
+Client::~Client() {
+  disconnect();
+  deinit();
+}
 
 void Client::init(const std::string &host, enet_uint16 port) {
   _client = enet_host_create(nullptr, 1, 2, 0, 0);
@@ -54,6 +57,23 @@ void Client::deinit() {
   }
 }
 
+void Client::disconnect(void) {
+  ENetEvent event;
+  enet_peer_disconnect(_peer, 0);
+  while (enet_host_service(_client, &event, 3000) > 0) {
+    switch (event.type) {
+    case ENET_EVENT_TYPE_RECEIVE:
+      enet_packet_destroy(event.packet);
+      break;
+    case ENET_EVENT_TYPE_DISCONNECT:
+      puts("Disconnection succeeded.");
+      break;
+    default:
+      break;
+    }
+  }
+}
+
 void Client::getEvent(Engine &eng) {
   ENetEvent event;
   while (enet_host_service(_client, &event, 0) > 0) {
@@ -80,7 +100,6 @@ void Client::sendMessage(const std::string &message) {
 }
 
 void Client::sendMessage(ENetPacket *packet) {
-  std::cout << "Sending stuff" << std::endl;
   if (_peer != nullptr) {
     enet_peer_send(_peer, 0, packet);
   }
