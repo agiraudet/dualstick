@@ -23,7 +23,7 @@ Vector const &Player::getVel(void) const { return _velocity; }
 void Player::setInput(PlayerInput input, bool state) { _inputs[input] = state; }
 
 void Player::applyInput(void) {
-  float speed = _maxSpeed / 2;
+  float speed = _maxSpeed;
   _velocity.setXY(0.f, 0.f);
   if (_inputs[UP])
     _velocity += Vector(0, -speed);
@@ -33,7 +33,7 @@ void Player::applyInput(void) {
     _velocity += Vector(-speed, 0);
   if (_inputs[RIGHT])
     _velocity += Vector(speed, 0);
-  _velocity.capIntensity(_maxSpeed);
+  _velocity.capIntensity(_maxSpeed * _maxSpeed);
   move();
 }
 

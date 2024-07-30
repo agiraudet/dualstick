@@ -7,7 +7,7 @@ int User::count = 0;
 
 User::User(void) : _peer(nullptr) { _id = count++; }
 
-User::User(ENetPeer *peer) : _peer(peer) { _id = count++; }
+User::User(ENetPeer *peer) : _peer(peer) { _id = count; }
 
 int User::getId(void) const { return _id; }
 
@@ -21,3 +21,8 @@ void User::send(const char *data, size_t dataLen) const {
 }
 
 ENetPeer *User::getPeer() const { return _peer; }
+
+void User::updatePlayer(Vector &pos, Vector &vel) {
+  player.setPos(pos);
+  player.setVel(vel);
+}

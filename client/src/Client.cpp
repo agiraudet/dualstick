@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstring>
 #include <enet/enet.h>
 #include <iostream>
@@ -107,36 +108,39 @@ void Client::sendMessage(ENetPacket *packet) {
 }
 
 void Client::_handleReceive(ENetEvent &event, Engine &eng) {
-  std::cout << "A packet of length " << event.packet->dataLength
-            << " containing \"" << event.packet->data << "\" was received."
-            << std::endl;
-  MessageHeader msgHeader;
-  memcpy(&msgHeader, event.packet->data, sizeof(MessageHeader));
-  std::cout << "msg Type: " << msgHeader.type << std::endl;
-  switch (msgHeader.type) {
+  /*std::cout << "A packet of length " << event.packet->dataLength*/
+  /*          << " containing \"" << event.packet->data << "\" was received."*/
+  /*          << std::endl;*/
+  MessageHeader *msgHeader = (MessageHeader *)(event.packet->data);
+  void *msgBody = (void *)(event.packet->data + sizeof(MessageHeader));
+  switch (msgHeader->type) {
   case PLR_CO: {
-    MessagePlayerCo msgCo =
-        deserializeMessage<MessagePlayerCo>((const char *)event.packet->data);
-    eng.addPlayer(msgCo.id);
+    MessagePlayerCo *msgCo = (MessagePlayerCo *)msgBody;
+    eng.addPlayer(msgCo->id);
     break;
   }
   case PLR_DISCO: {
-    MessagePlayerDisco msgDisco = deserializeMessage<MessagePlayerDisco>(
-        (const char *)event.packet->data);
-    eng.removePlayer(msgDisco.id);
+    MessagePlayerDisco *msgDisco = (MessagePlayerDisco *)msgBody;
+    eng.removePlayer(msgDisco->id);
     break;
   }
   case PLR_UPDATE: {
-    MessagePlayerUpdate msgUpdate = deserializeMessage<MessagePlayerUpdate>(
-        (const char *)event.packet->data);
-    eng.updatePlayer(msgUpdate.id, msgUpdate.pos, msgUpdate.vel);
+    MessagePlayerUpdate *msgUpdate = (MessagePlayerUpdate *)msgBody;
+    eng.updatePlayer(msgUpdate->id, msgUpdate->pos, msgUpdate->vel);
     break;
   }
   case PLR_ID: {
-    MessagePlayerID msgID =
-        deserializeMessage<MessagePlayerID>((const char *)event.packet->data);
-    eng.setPlayerId(msgID.id);
+    MessagePlayerID *msgID = (MessagePlayerID *)msgBody;
+    eng.setPlayerId(msgID->id);
+    printf("received ID: %d\n", msgID->id);
     break;
+  }
+  case GAME_STATE: {
+    MessageGameState *msgSate = (MessageGameState *)msgBody;
+    for (int i = 0; i < msgSate->nplayer; i++) {
+      MessagePlayerUpdate *plr = &msgSate->players[i];
+      eng.updatePlayer(plr->id, plr->pos, plr->vel);
+    }
   }
   default:
     break;

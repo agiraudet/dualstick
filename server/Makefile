@@ -7,7 +7,8 @@ INC_DIR         := ./inc $(CMN_DIR)/inc
 
 CMN_BUILD_DIR   := $(CMN_DIR)/build
 CMN_SRCS_DIR    := $(CMN_DIR)/src
-CMN_SRCS        := Vector.cpp
+CMN_SRCS        := Player.cpp \
+									 Vector.cpp
 CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))
 
 BUILD_DIR       := ./build

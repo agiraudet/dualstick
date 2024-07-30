@@ -8,8 +8,9 @@
 #include "Vector.hpp"
 
 #define MESSAGE_VERSION 1
+#define MAX_N_PLAYER 4
 
-enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID };
+enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID, GAME_STATE };
 
 struct MessageHeader {
   MessageType type;
@@ -32,6 +33,11 @@ struct MessagePlayerUpdate {
 
 struct MessagePlayerID {
   int id;
+};
+
+struct MessageGameState {
+  int nplayer;
+  MessagePlayerUpdate players[MAX_N_PLAYER];
 };
 
 template <typename T>

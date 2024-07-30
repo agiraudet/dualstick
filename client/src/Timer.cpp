@@ -47,12 +47,14 @@ bool Timer::isStarted(void) const { return _started; }
 
 bool Timer::isPaused(void) const { return _started && _paused; }
 
-TimerFps::TimerFps(void) : _countedFrame(0), _target(30.f) {
+// FPS TIMER
+
+TimerFps::TimerFps(void) : _countedFrame(0), _target(30.f), _startTime(0) {
   _tickPerFrame = 1000 / _target;
 }
 
 TimerFps::TimerFps(float target)
-    : _countedFrame(0), _target(target), _tickPerFrame(0.f) {
+    : _countedFrame(0), _target(target), _tickPerFrame(0.f), _startTime(0) {
   _tickPerFrame = 1000 / _target;
 }
 
@@ -63,10 +65,13 @@ void TimerFps::setFpsTarget(float target) {
 
 void TimerFps::capFps(void) {
   Uint32 time = SDL_GetTicks();
-  if (_countedFrame < _target) {
-    _lastFrame = time;
-    return;
-  }
+  if (_startTime == 0)
+    _startTime = SDL_GetTicks();
+  ++_countedFrame;
   if (time - _lastFrame < _tickPerFrame)
     SDL_Delay(time - _lastFrame);
+}
+
+float TimerFps::getFps(void) const {
+  return (SDL_GetTicks() - (double)_startTime) / _countedFrame * 100;
 }

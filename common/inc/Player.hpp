@@ -3,7 +3,7 @@
 
 #include "Vector.hpp"
 
-#define PLAYER_MAXSPEED 10.f
+#define PLAYER_MAXSPEED 8.f
 
 enum PlayerInput { UP, DOWN, LEFT, RIGHT, N_INPUT };
 

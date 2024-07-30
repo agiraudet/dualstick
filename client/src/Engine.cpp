@@ -4,6 +4,9 @@
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_stdinc.h>
+#include <SDL2/SDL_timer.h>
+#include <cstdio>
 #include <enet/enet.h>
 #include <iostream>
 
@@ -22,31 +25,112 @@ Engine::~Engine(void) {
   SDL_DestroyWindow(_window);
   SDL_Quit();
 }
+/**/
+/*void Engine::run(void) {*/
+/*  TimerFps timerFps(30);*/
+/*  MessagePlayerUpdate msg{-1, Vector(-99, -99), Vector(-99, -99)};*/
+/*  Uint32 lastUpdate = SDL_GetTicks();*/
+/*  Uint32 currentTime = lastUpdate;*/
+/**/
+/*  while (_alive) {*/
+/*    _client.getEvent(*this);*/
+/*    _getEvent();*/
+/*    _player.applyInput();*/
+/**/
+/*    // fct*/
+/*    currentTime = SDL_GetTicks();*/
+/*    if (currentTime - lastUpdate > 10) {*/
+/*      lastUpdate = currentTime;*/
+/*      bool modidified = false;*/
+/*      msg.id = _player.getId();*/
+/*      Vector const &plrPos = _player.getPos();*/
+/*      Vector const &plrVel = _player.getVel();*/
+/*      if (msg.pos != plrPos) {*/
+/*        modidified = true;*/
+/*        msg.pos = plrPos;*/
+/*      }*/
+/*      if (msg.vel != plrVel) {*/
+/*        modidified = true;*/
+/*        msg.vel = plrVel;*/
+/*      }*/
+/*      if (modidified) {*/
+/*        ENetPacket *pck = packageMessage(msg, PLR_UPDATE);*/
+/*        _client.sendMessage(pck);*/
+/*        msg.vel = _player.getVel();*/
+/*      }*/
+/*    }*/
+/*    // end fct*/
+/**/
+/*    _render();*/
+/*  }*/
+/*}*/
 
 void Engine::run(void) {
-  TimerFps timerFps(30);
+  MessagePlayerUpdate msg{-1, Vector(-99, -99), Vector(-99, -99)};
+  Uint32 lastUpdate = SDL_GetTicks();
+  Uint32 currentTime = lastUpdate;
+  Uint32 frameCount = 0;
+  Uint32 startTime = lastUpdate;
+  const Uint32 fpsUpdateInterval =
+      1000; // Update FPS every 1000 milliseconds (1 second)
+  const Uint32 targetFrameTime =
+      1000 / 60; // Target frame time in milliseconds for 30 FPS
 
   while (_alive) {
     _client.getEvent(*this);
     _getEvent();
     _player.applyInput();
-    MessagePlayerUpdate msg = {_player.getId(), _player.getPos(),
-                               _player.getVel()};
-    ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
-    _client.sendMessage(pck);
-    /*enet_packet_destroy(pck);*/
+
+    // fct
+    currentTime = SDL_GetTicks();
+    /*if (currentTime - lastUpdate > 10) {*/
+    if (true) {
+      /*lastUpdate = currentTime;*/
+      bool modified = false;
+      msg.id = _player.getId();
+      Vector const &plrPos = _player.getPos();
+      Vector const &plrVel = _player.getVel();
+      if (msg.pos != plrPos) {
+        modified = true;
+        msg.pos = plrPos;
+      }
+      if (msg.vel != plrVel) {
+        modified = true;
+        msg.vel = plrVel;
+      }
+      if (modified) {
+        ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
+        _client.sendMessage(pck);
+        msg.vel = _player.getVel();
+      }
+    }
+    // end fct
+
     _render();
-    timerFps.capFps();
+    frameCount++;
+
+    // Calculate and print FPS
+    Uint32 elapsedTime = currentTime - startTime;
+    if (elapsedTime >= fpsUpdateInterval) {
+      float fps = frameCount / (elapsedTime / 1000.0f);
+      std::cout << "Average FPS: " << fps << std::endl;
+      startTime = currentTime;
+      frameCount = 0;
+    }
+
+    // Cap the frame rate to 30 FPS
+    Uint32 frameTime = SDL_GetTicks() - currentTime;
+    if (frameTime < targetFrameTime) {
+      SDL_Delay(targetFrameTime - frameTime);
+    }
   }
 }
-
 void Engine::setPlayerId(int id) { _player.setId(id); }
 
 void Engine::removePlayer(int id) {
   if (_otherPlayers.find(id) != _otherPlayers.end()) {
     _otherPlayers.erase(id);
   }
-  std::cout << "remove player " << id << std::endl;
 }
 
 void Engine::addPlayer(int id) {
@@ -54,11 +138,10 @@ void Engine::addPlayer(int id) {
     _otherPlayers.erase(id);
   }
   _otherPlayers[id] = Player(id);
-  std::cout << "added player " << id << std::endl;
 }
 
 void Engine::updatePlayer(int id, Vector &pos, Vector &vel) {
-  std::cout << "update player " << id << std::endl;
+  /*printf("Update player id %d\n", id);*/
   std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
   if (it == _otherPlayers.end() && id != _player.getId())
     addPlayer(id);

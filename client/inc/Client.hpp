@@ -4,6 +4,8 @@
 #include <enet/enet.h>
 #include <string>
 
+#include "Message.hpp"
+
 class Engine;
 
 class Client {

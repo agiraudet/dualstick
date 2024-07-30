@@ -22,8 +22,8 @@ void Vector::capIntensity(float const maxIntensity) {
   float inten = intensity();
   if (inten > maxIntensity) {
     float factor = maxIntensity / inten;
-    x /= factor;
-    y /= factor;
+    x *= factor;
+    y *= factor;
   }
 }
 
