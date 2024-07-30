@@ -22,7 +22,7 @@ public:
   void setPlayerId(int id);
   void removePlayer(int id);
   void addPlayer(int id);
-  void updatePlayer(int id, SDL_Rect &rect);
+  void updatePlayer(int id, Vector &pos, Vector &vel);
 
 private:
   void _getEvent(void);

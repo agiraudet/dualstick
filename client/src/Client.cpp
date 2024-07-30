@@ -129,7 +129,7 @@ void Client::_handleReceive(ENetEvent &event, Engine &eng) {
   case PLR_UPDATE: {
     MessagePlayerUpdate msgUpdate = deserializeMessage<MessagePlayerUpdate>(
         (const char *)event.packet->data);
-    eng.updatePlayer(msgUpdate.id, msgUpdate.rect);
+    eng.updatePlayer(msgUpdate.id, msgUpdate.pos, msgUpdate.vel);
     break;
   }
   case PLR_ID: {

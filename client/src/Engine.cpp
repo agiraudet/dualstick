@@ -30,7 +30,8 @@ void Engine::run(void) {
     _client.getEvent(*this);
     _getEvent();
     _player.applyInput();
-    MessagePlayerUpdate msg = {_player.getId(), _player.getRect()};
+    MessagePlayerUpdate msg = {_player.getId(), _player.getPos(),
+                               _player.getVel()};
     ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
     _client.sendMessage(pck);
     /*enet_packet_destroy(pck);*/
@@ -56,14 +57,16 @@ void Engine::addPlayer(int id) {
   std::cout << "added player " << id << std::endl;
 }
 
-void Engine::updatePlayer(int id, SDL_Rect &rect) {
+void Engine::updatePlayer(int id, Vector &pos, Vector &vel) {
   std::cout << "update player " << id << std::endl;
   std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
   if (it == _otherPlayers.end() && id != _player.getId())
     addPlayer(id);
   it = _otherPlayers.find(id);
-  if (it != _otherPlayers.end())
-    _otherPlayers[id].updateRect(rect);
+  if (it != _otherPlayers.end()) {
+    _otherPlayers[id].setPos(pos);
+    _otherPlayers[id].setVel(vel);
+  }
 }
 
 void Engine::_getEvent(void) {
@@ -77,16 +80,18 @@ void Engine::_getEvent(void) {
 }
 
 void Engine::_render(void) {
-  /*SDL_Rect rect;*/
   SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
   SDL_RenderClear(_renderer);
 
+  SDL_Rect rect = {(int)_player.getPos().x, (int)_player.getPos().y, 50, 50};
   SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
-  SDL_RenderFillRect(_renderer, &_player.getRect());
+  SDL_RenderFillRect(_renderer, &rect);
 
   SDL_SetRenderDrawColor(_renderer, 0, 0, 255, 255);
   for (const auto &p : _otherPlayers) {
-    SDL_RenderFillRect(_renderer, &p.second.getRect());
+    rect.x = p.second.getPos().x;
+    rect.y = p.second.getPos().y;
+    SDL_RenderFillRect(_renderer, &rect);
   }
 
   SDL_RenderPresent(_renderer);

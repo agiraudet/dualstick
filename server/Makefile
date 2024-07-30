@@ -1,38 +1,46 @@
-NAME			:=	s
+NAME            := s
 
-DEPS			:=	-lSDL2 -lenet
+DEPS            := -lSDL2 -lenet
 
-BUILD_DIR	:=	./build
+CMN_DIR         := ../common
+INC_DIR         := ./inc $(CMN_DIR)/inc
 
-INC_DIR		:=	./inc
+CMN_BUILD_DIR   := $(CMN_DIR)/build
+CMN_SRCS_DIR    := $(CMN_DIR)/src
+CMN_SRCS        := Vector.cpp
+CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))
 
-SRCS_DIR	:=	./src
+BUILD_DIR       := ./build
+SRCS_DIR        := ./src
+SRCS            := Server.cpp \
+                   User.cpp \
+                   main.cpp
+OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
 
-SRCS			:=	Server.cpp \
-							User.cpp \
-							main.cpp
+INC_FLAGS       := $(addprefix -I, $(INC_DIR))
+CXXFLAGS        := -MD -Wall -Wextra $(INC_FLAGS) -g
+CXX             := g++
 
-OBJS			:=	$(SRCS:%.cpp=$(BUILD_DIR)/%.o)
-
-INC_FLAGS	:=	$(addprefix -I, $(INC_DIR))
-
-CXXFLAGS	:=	-MD -Wall -Wextra -Werror $(INC_FLAGS) -I../common/ -g
-
-CXX				:=	g++
-
-$(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) $(DEPS) -o $@ $(DEPS)
+$(NAME): $(OBJS) $(CMN_OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) $(CMN_OBJS) $(DEPS) -o $@
 
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)/$(EDIT_DIR)
+	mkdir -p $(BUILD_DIR)
+
+$(CMN_BUILD_DIR):
+	mkdir -p $(CMN_BUILD_DIR)
 
 $(BUILD_DIR)/%.o: $(SRCS_DIR)/%.cpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@ 
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-all: $(NAME) $(EDIT_NAME)
+$(CMN_BUILD_DIR)/%.o: $(CMN_SRCS_DIR)/%.cpp | $(CMN_BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+all: $(NAME)
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(CMN_BUILD_DIR)
 
 fclean: clean
 	rm -f $(NAME)
@@ -40,5 +48,6 @@ fclean: clean
 re: fclean all
 
 -include $(OBJS:.o=.d)
+-include $(CMN_OBJS:.o=.d)
 
 .PHONY: all clean fclean re

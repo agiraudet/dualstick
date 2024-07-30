@@ -1,5 +1,6 @@
 client/build/
 server/build/
+common/build/
 client/c
 server/s
 tmp

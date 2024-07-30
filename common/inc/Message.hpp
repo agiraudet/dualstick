@@ -5,6 +5,8 @@
 #include <cstring>
 #include <enet/enet.h>
 
+#include "Vector.hpp"
+
 #define MESSAGE_VERSION 1
 
 enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID };
@@ -24,7 +26,8 @@ struct MessagePlayerDisco {
 
 struct MessagePlayerUpdate {
   int id;
-  SDL_Rect rect;
+  Vector pos;
+  Vector vel;
 };
 
 struct MessagePlayerID {
