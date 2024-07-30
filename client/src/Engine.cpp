@@ -25,45 +25,6 @@ Engine::~Engine(void) {
   SDL_DestroyWindow(_window);
   SDL_Quit();
 }
-/**/
-/*void Engine::run(void) {*/
-/*  TimerFps timerFps(30);*/
-/*  MessagePlayerUpdate msg{-1, Vector(-99, -99), Vector(-99, -99)};*/
-/*  Uint32 lastUpdate = SDL_GetTicks();*/
-/*  Uint32 currentTime = lastUpdate;*/
-/**/
-/*  while (_alive) {*/
-/*    _client.getEvent(*this);*/
-/*    _getEvent();*/
-/*    _player.applyInput();*/
-/**/
-/*    // fct*/
-/*    currentTime = SDL_GetTicks();*/
-/*    if (currentTime - lastUpdate > 10) {*/
-/*      lastUpdate = currentTime;*/
-/*      bool modidified = false;*/
-/*      msg.id = _player.getId();*/
-/*      Vector const &plrPos = _player.getPos();*/
-/*      Vector const &plrVel = _player.getVel();*/
-/*      if (msg.pos != plrPos) {*/
-/*        modidified = true;*/
-/*        msg.pos = plrPos;*/
-/*      }*/
-/*      if (msg.vel != plrVel) {*/
-/*        modidified = true;*/
-/*        msg.vel = plrVel;*/
-/*      }*/
-/*      if (modidified) {*/
-/*        ENetPacket *pck = packageMessage(msg, PLR_UPDATE);*/
-/*        _client.sendMessage(pck);*/
-/*        msg.vel = _player.getVel();*/
-/*      }*/
-/*    }*/
-/*    // end fct*/
-/**/
-/*    _render();*/
-/*  }*/
-/*}*/
 
 void Engine::run(void) {
   MessagePlayerUpdate msg{-1, Vector(-99, -99), Vector(-99, -99)};
@@ -74,7 +35,7 @@ void Engine::run(void) {
   const Uint32 fpsUpdateInterval =
       1000; // Update FPS every 1000 milliseconds (1 second)
   const Uint32 targetFrameTime =
-      1000 / 60; // Target frame time in milliseconds for 30 FPS
+      1000 / 500; // Target frame time in milliseconds for 30 FPS
 
   while (_alive) {
     _client.getEvent(*this);
@@ -113,7 +74,7 @@ void Engine::run(void) {
     Uint32 elapsedTime = currentTime - startTime;
     if (elapsedTime >= fpsUpdateInterval) {
       float fps = frameCount / (elapsedTime / 1000.0f);
-      std::cout << "Average FPS: " << fps << std::endl;
+      /*std::cout << "Average FPS: " << fps << std::endl;*/
       startTime = currentTime;
       frameCount = 0;
     }

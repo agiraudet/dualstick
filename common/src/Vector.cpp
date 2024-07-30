@@ -91,6 +91,23 @@ Vector Vector::operator/(Vector const &other) const {
   return Vector(x / other.x, y / other.y);
 }
 
+// Scalar operators
+Vector Vector::operator+(float scalar) const {
+  return Vector(+scalar, y + scalar);
+}
+
+Vector Vector::operator-(float scalar) const {
+  return Vector(x - scalar, y - scalar);
+}
+
+Vector Vector::operator*(float scalar) const {
+  return Vector(x * scalar, y * scalar);
+}
+
+Vector Vector::operator/(float scalar) const {
+  return Vector(x / scalar, y / scalar);
+}
+
 // Compound assignment operators
 Vector &Vector::operator+=(Vector const &other) {
   x += other.x;

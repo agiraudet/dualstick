@@ -1,14 +1,31 @@
 #include "Player.hpp"
+#include <bits/types/time_t.h>
+#include <chrono>
+#include <cstdio>
+#include <ctime>
 
-Player::Player(void) : _id(0), _maxSpeed(PLAYER_MAXSPEED) { _resetInputs(); }
+Player::Player(void) : _id(0), _maxSpeed(PLAYER_MAXSPEED) {
+  _resetInputs();
+  _lastMove = std::chrono::high_resolution_clock::now();
+}
 
-Player::Player(int id) : _id(id), _maxSpeed(PLAYER_MAXSPEED) { _resetInputs(); }
+Player::Player(int id) : _id(id), _maxSpeed(PLAYER_MAXSPEED) {
+  _resetInputs();
+  _lastMove = std::chrono::high_resolution_clock::now();
+}
 
 Player::~Player(void) {}
 
 void Player::setId(int id) { _id = id; }
 
-void Player::move(void) { _position += _velocity; }
+void Player::move(void) {
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> timeSinceMove =
+      currentTime - _lastMove;
+  double deltaTime = timeSinceMove.count() / 1000.0;
+  _position += _velocity * deltaTime;
+  _lastMove = currentTime;
+}
 
 int Player::getId(void) const { return _id; }
 

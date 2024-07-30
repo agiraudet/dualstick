@@ -2,8 +2,9 @@
 #define PLAYER_HPP
 
 #include "Vector.hpp"
+#include <chrono>
 
-#define PLAYER_MAXSPEED 8.f
+#define PLAYER_MAXSPEED 800.f
 
 enum PlayerInput { UP, DOWN, LEFT, RIGHT, N_INPUT };
 
@@ -32,6 +33,7 @@ private:
   Vector _position;
   float _maxSpeed;
   bool _inputs[N_INPUT];
+  std::chrono::high_resolution_clock::time_point _lastMove;
 };
 
 #endif

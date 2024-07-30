@@ -34,6 +34,10 @@ struct Vector {
   Vector operator-(Vector const &other) const;
   Vector operator*(Vector const &other) const;
   Vector operator/(Vector const &other) const;
+  Vector operator+(float scalar) const;
+  Vector operator-(float scalar) const;
+  Vector operator*(float scalar) const;
+  Vector operator/(float scalar) const;
   Vector &operator+=(Vector const &other);
   Vector &operator-=(Vector const &other);
   Vector &operator*=(Vector const &other);

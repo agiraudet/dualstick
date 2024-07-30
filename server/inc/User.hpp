@@ -14,7 +14,6 @@ public:
   User(ENetPeer *peer);
   int getId(void) const;
   void send(ENetPacket *packet) const;
-  void send(const char *data, size_t dataLen) const;
   ENetPeer *getPeer() const;
   void updatePlayer(Vector &pos, Vector &vel);
 
