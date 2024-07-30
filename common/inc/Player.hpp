@@ -19,6 +19,9 @@ public:
   int getId(void) const;
   void setPos(Vector &pos);
   void setVel(Vector &vel);
+  void setAngle(float angle);
+  void aimAngle(int targetX, int targetY);
+  float getAngle(void) const;
   Vector const &getPos(void) const;
   Vector const &getVel(void) const;
   void setInput(PlayerInput input, bool state);
@@ -31,6 +34,7 @@ private:
   int _id;
   Vector _velocity;
   Vector _position;
+  float _angle;
   float _maxSpeed;
   bool _inputs[N_INPUT];
   std::chrono::high_resolution_clock::time_point _lastMove;

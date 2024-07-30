@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_rect.h>
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 #include <unordered_map>
 
@@ -36,6 +37,7 @@ private:
   std::unordered_map<int, Player> _otherPlayers;
   SDL_Window *_window;
   SDL_Renderer *_renderer;
+  SDL_Texture *_texPlayer;
 };
 
 #endif

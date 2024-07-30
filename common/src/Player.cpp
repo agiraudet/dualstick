@@ -1,6 +1,7 @@
 #include "Player.hpp"
 #include <bits/types/time_t.h>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <ctime>
 
@@ -36,6 +37,16 @@ void Player::setVel(Vector &vel) { _velocity = vel; }
 Vector const &Player::getPos(void) const { return _position; }
 
 Vector const &Player::getVel(void) const { return _velocity; }
+
+float Player::getAngle(void) const { return _angle; }
+
+void Player::setAngle(float angle) { _angle = angle; }
+
+void Player::aimAngle(int targetX, int targetY) {
+  float dx = targetX - _position.x;
+  float dy = targetY - _position.y;
+  _angle = std::atan2(dy, dx) * (180.0f / M_PI);
+}
 
 void Player::setInput(PlayerInput input, bool state) { _inputs[input] = state; }
 

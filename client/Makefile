@@ -1,6 +1,6 @@
 NAME            := c
 
-DEPS            := -lSDL2 -lenet
+DEPS            := -lSDL2 -lSDL2_image -lenet
 
 CMN_DIR         := ../common
 INC_DIR         := ./inc $(CMN_DIR)/inc

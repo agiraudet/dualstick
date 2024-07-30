@@ -3,7 +3,9 @@
 #include "Timer.hpp"
 
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <cstdio>
@@ -12,12 +14,14 @@
 
 Engine::Engine(void)
     : _client(Client()), _alive(true), _window(nullptr), _renderer(nullptr) {
-  _client.init("localhost", 1234);
+  _client.init("localhost", 45454);
   SDL_Init(SDL_INIT_VIDEO);
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, SCR_WIDTH, SCR_HEIGHT,
                              SDL_WINDOW_SHOWN);
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+  // TMP
+  _texPlayer = IMG_LoadTexture(_renderer, "../assets/player.png");
 }
 
 Engine::~Engine(void) {
@@ -41,12 +45,15 @@ void Engine::run(void) {
     _client.getEvent(*this);
     _getEvent();
     _player.applyInput();
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    _player.aimAngle(mouseX, mouseY);
 
     // fct
     currentTime = SDL_GetTicks();
-    /*if (currentTime - lastUpdate > 10) {*/
-    if (true) {
-      /*lastUpdate = currentTime;*/
+    if (currentTime - lastUpdate > 10) {
+      /*if (true) {*/
+      lastUpdate = currentTime;
       bool modified = false;
       msg.id = _player.getId();
       Vector const &plrPos = _player.getPos();
@@ -128,8 +135,9 @@ void Engine::_render(void) {
   SDL_RenderClear(_renderer);
 
   SDL_Rect rect = {(int)_player.getPos().x, (int)_player.getPos().y, 50, 50};
-  SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
-  SDL_RenderFillRect(_renderer, &rect);
+  SDL_Point center = {rect.w / 2, rect.h / 2};
+  SDL_RenderCopyEx(_renderer, _texPlayer, NULL, &rect, _player.getAngle(),
+                   &center, SDL_FLIP_NONE);
 
   SDL_SetRenderDrawColor(_renderer, 0, 0, 255, 255);
   for (const auto &p : _otherPlayers) {

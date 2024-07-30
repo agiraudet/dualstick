@@ -1,7 +1,11 @@
 #include <algorithm>
+#include <bits/chrono.h>
+#include <chrono>
 #include <enet/enet.h>
 #include <iostream>
+#include <ratio>
 #include <stdexcept>
+#include <thread>
 
 #include "Message.hpp"
 #include "Server.hpp"
@@ -17,7 +21,8 @@ Server::~Server() { deinit(); }
 
 void Server::init() {
   _address.host = ENET_HOST_ANY;
-  _address.port = 1234; // Server will bind to this port
+  /*_address.port = 1234; // Server will bind to this port*/
+  _address.port = 45454;
   _server = enet_host_create(&_address, 32, 2, 0, 0);
   if (_server == nullptr) {
     throw std::runtime_error(
@@ -33,31 +38,78 @@ void Server::deinit() {
     _server = nullptr;
   }
 }
-
 void Server::run() {
+  int tickRate = 120;
   ENetEvent event;
+  auto lastTick = std::chrono::high_resolution_clock::now();
+  auto tickDuration =
+      std::chrono::milliseconds(1000 / tickRate); // Duration of each tick
+
   while (true) {
-    _sendGameSateToAll();
-    _msgOutProcess();
-    while (enet_host_service(_server, &event, 0) > 0) {
-      switch (event.type) {
-      case ENET_EVENT_TYPE_CONNECT:
-        _handleConnect(event);
-        break;
-      case ENET_EVENT_TYPE_RECEIVE:
-        _handleReceive(event);
-        break;
-      case ENET_EVENT_TYPE_DISCONNECT:
-        _handleDisconnect(event);
-        break;
-      default:
-        std::cout << "WEIRD " << event.type << std::endl;
-        break;
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> timeSinceLastTick =
+        currentTime - lastTick;
+
+    if (timeSinceLastTick >= tickDuration) {
+      lastTick = currentTime;
+      _sendGameSateToAll();
+      _msgOutProcess();
+
+      while (enet_host_service(_server, &event, 0) > 0) {
+        switch (event.type) {
+        case ENET_EVENT_TYPE_CONNECT:
+          _handleConnect(event);
+          break;
+        case ENET_EVENT_TYPE_RECEIVE:
+          _handleReceive(event);
+          break;
+        case ENET_EVENT_TYPE_DISCONNECT:
+          _handleDisconnect(event);
+          break;
+        default:
+          std::cout << "WEIRD " << event.type << std::endl;
+          break;
+        }
       }
+      _msgOutClean();
+    } else {
+      // Sleep for the remaining time of the tick duration
+      auto sleepTime = tickDuration - timeSinceLastTick;
+      std::this_thread::sleep_for(sleepTime);
     }
-    _msgOutClean();
   }
 }
+
+/*void Server::run() {*/
+/*  int tickRate = 60;*/
+/*  ENetEvent event;*/
+/*  auto lastTick = std::chrono::high_resolution_clock::now();*/
+/*  while (true) {*/
+/*    _sendGameSateToAll();*/
+/*    _msgOutProcess();*/
+/*    while (enet_host_service(_server, &event, 0) > 0) {*/
+/*      switch (event.type) {*/
+/*      case ENET_EVENT_TYPE_CONNECT:*/
+/*        _handleConnect(event);*/
+/*        break;*/
+/*      case ENET_EVENT_TYPE_RECEIVE:*/
+/*        _handleReceive(event);*/
+/*        break;*/
+/*      case ENET_EVENT_TYPE_DISCONNECT:*/
+/*        _handleDisconnect(event);*/
+/*        break;*/
+/*      default:*/
+/*        std::cout << "WEIRD " << event.type << std::endl;*/
+/*        break;*/
+/*      }*/
+/*    }*/
+/*    _msgOutClean();*/
+/*    auto currentTime = std::chrono::high_resolution_clock::now();*/
+/*    std::chrono::duration<double, std::milli> timeSinceLastTick =*/
+/*        currentTime - lastTick;*/
+/*    //add code here*/
+/*  }*/
+/*}*/
 
 void Server::_msgOutProcess(void) {
   for (auto &msg : _msgOut) {
