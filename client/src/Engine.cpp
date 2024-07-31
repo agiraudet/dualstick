@@ -1,5 +1,4 @@
 #include "Engine.hpp"
-#include "Message.hpp"
 #include "Timer.hpp"
 
 #include <SDL2/SDL_events.h>
@@ -9,12 +8,16 @@
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <cstdio>
+#include <cstdlib>
 #include <enet/enet.h>
+#include <enet/types.h>
+#include <exception>
 #include <iostream>
 
 Engine::Engine(void)
-    : _client(Client()), _alive(true), _window(nullptr), _renderer(nullptr) {
-  _client.init("localhost", 45454);
+    : _client(Client()), _alive(true),
+      _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99)}),
+      _window(nullptr), _renderer(nullptr) {
   SDL_Init(SDL_INIT_VIDEO);
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, SCR_WIDTH, SCR_HEIGHT,
@@ -22,6 +25,7 @@ Engine::Engine(void)
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
   // TMP
   _texPlayer = IMG_LoadTexture(_renderer, "../assets/player.png");
+  _texOther = IMG_LoadTexture(_renderer, "../assets/other.png");
 }
 
 Engine::~Engine(void) {
@@ -30,17 +34,18 @@ Engine::~Engine(void) {
   SDL_Quit();
 }
 
-void Engine::run(void) {
-  MessagePlayerUpdate msg{-1, Vector(-99, -99), Vector(-99, -99)};
-  Uint32 lastUpdate = SDL_GetTicks();
-  Uint32 currentTime = lastUpdate;
-  Uint32 frameCount = 0;
-  Uint32 startTime = lastUpdate;
-  const Uint32 fpsUpdateInterval =
-      1000; // Update FPS every 1000 milliseconds (1 second)
-  const Uint32 targetFrameTime =
-      1000 / 500; // Target frame time in milliseconds for 30 FPS
+int Engine::connect(const std::string &host, enet_uint16 port) {
+  try {
+    _client.init(host, port);
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+    return -1;
+  }
+  return 0;
+}
 
+void Engine::run(void) {
+  TimerFps fpsTimer(60.f);
   while (_alive) {
     _client.getEvent(*this);
     _getEvent();
@@ -48,51 +53,27 @@ void Engine::run(void) {
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
     _player.aimAngle(mouseX, mouseY);
-
-    // fct
-    currentTime = SDL_GetTicks();
-    if (currentTime - lastUpdate > 10) {
-      /*if (true) {*/
-      lastUpdate = currentTime;
-      bool modified = false;
-      msg.id = _player.getId();
-      Vector const &plrPos = _player.getPos();
-      Vector const &plrVel = _player.getVel();
-      if (msg.pos != plrPos) {
-        modified = true;
-        msg.pos = plrPos;
-      }
-      if (msg.vel != plrVel) {
-        modified = true;
-        msg.vel = plrVel;
-      }
-      if (modified) {
-        ENetPacket *pck = packageMessage(msg, PLR_UPDATE);
-        _client.sendMessage(pck);
-        msg.vel = _player.getVel();
-      }
-    }
-    // end fct
-
+    _NotifyPlayerUpdate();
     _render();
-    frameCount++;
-
-    // Calculate and print FPS
-    Uint32 elapsedTime = currentTime - startTime;
-    if (elapsedTime >= fpsUpdateInterval) {
-      float fps = frameCount / (elapsedTime / 1000.0f);
-      /*std::cout << "Average FPS: " << fps << std::endl;*/
-      startTime = currentTime;
-      frameCount = 0;
-    }
-
-    // Cap the frame rate to 30 FPS
-    Uint32 frameTime = SDL_GetTicks() - currentTime;
-    if (frameTime < targetFrameTime) {
-      SDL_Delay(targetFrameTime - frameTime);
-    }
+    fpsTimer.capFps();
   }
 }
+
+void Engine::_NotifyPlayerUpdate(void) {
+  Vector const &plrPos = _player.getPos();
+  Vector const &plrVel = _player.getVel();
+  float plrAngle = _player.getAngle();
+  _msgPlayerUpdate.id = _player.getId();
+  if (_msgPlayerUpdate.angle != plrAngle || _msgPlayerUpdate.pos != plrPos ||
+      _msgPlayerUpdate.vel != plrVel) {
+    _msgPlayerUpdate.angle = plrAngle;
+    _msgPlayerUpdate.pos = plrPos;
+    _msgPlayerUpdate.vel = plrVel;
+    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_UPDATE);
+    _client.sendMessage(pck);
+  }
+}
+
 void Engine::setPlayerId(int id) { _player.setId(id); }
 
 void Engine::removePlayer(int id) {
@@ -108,16 +89,15 @@ void Engine::addPlayer(int id) {
   _otherPlayers[id] = Player(id);
 }
 
-void Engine::updatePlayer(int id, Vector &pos, Vector &vel) {
-  /*printf("Update player id %d\n", id);*/
-  std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
-  if (it == _otherPlayers.end() && id != _player.getId())
-    addPlayer(id);
-  it = _otherPlayers.find(id);
-  if (it != _otherPlayers.end()) {
-    _otherPlayers[id].setPos(pos);
-    _otherPlayers[id].setVel(vel);
-  }
+void Engine::updatePlayer(MessagePlayerUpdate *msg) {
+  if (!msg || msg->id == _player.getId())
+    return;
+  std::unordered_map<int, Player>::iterator it = _otherPlayers.find(msg->id);
+  if (it == _otherPlayers.end() && msg->id != _player.getId())
+    addPlayer(msg->id);
+  _otherPlayers[msg->id].setPos(msg->pos);
+  _otherPlayers[msg->id].setVel(msg->vel);
+  _otherPlayers[msg->id].setAngle(msg->angle);
 }
 
 void Engine::_getEvent(void) {
@@ -134,16 +114,19 @@ void Engine::_render(void) {
   SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
   SDL_RenderClear(_renderer);
 
-  SDL_Rect rect = {(int)_player.getPos().x, (int)_player.getPos().y, 50, 50};
+  SDL_Rect rect = {(int)_player.getPos().x - 25, (int)_player.getPos().y - 25,
+                   50, 50};
   SDL_Point center = {rect.w / 2, rect.h / 2};
   SDL_RenderCopyEx(_renderer, _texPlayer, NULL, &rect, _player.getAngle(),
                    &center, SDL_FLIP_NONE);
 
-  SDL_SetRenderDrawColor(_renderer, 0, 0, 255, 255);
   for (const auto &p : _otherPlayers) {
-    rect.x = p.second.getPos().x;
-    rect.y = p.second.getPos().y;
-    SDL_RenderFillRect(_renderer, &rect);
+    rect.x = p.second.getPos().x - 25;
+    rect.y = p.second.getPos().y - 25;
+    center.x = rect.w / 2;
+    center.y = rect.h / 2;
+    SDL_RenderCopyEx(_renderer, _texOther, NULL, &rect, p.second.getAngle(),
+                     &center, SDL_FLIP_NONE);
   }
 
   SDL_RenderPresent(_renderer);
@@ -151,15 +134,19 @@ void Engine::_render(void) {
 
 void Engine::_processInput(SDL_Keycode &sym, bool state) {
   switch (sym) {
+  case SDLK_w:
   case SDLK_UP:
     _player.setInput(UP, state);
     break;
+  case SDLK_s:
   case SDLK_DOWN:
     _player.setInput(DOWN, state);
     break;
+  case SDLK_a:
   case SDLK_LEFT:
     _player.setInput(LEFT, state);
     break;
+  case SDLK_d:
   case SDLK_RIGHT:
     _player.setInput(RIGHT, state);
     break;

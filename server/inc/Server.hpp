@@ -23,12 +23,14 @@ public:
   void init();
   void deinit();
   void run();
+  void stop();
 
 private:
   void _msgOutProcess(void);
   void _msgOutClean(void);
   void _msgOutAdd(ENetPeer *perr, ENetPacket *packet, bool ccAll);
 
+  void _disconnectAllClients(void);
   void _handleConnect(ENetEvent &event);
   void _handleReceive(ENetEvent &event);
   void _handleDisconnect(ENetEvent &event);
@@ -37,10 +39,14 @@ private:
   void _sendGameSateToAll(void);
   MessageGameState _craftMsgGameState(void);
 
+  bool _running;
   ENetAddress _address;
   ENetHost *_server;
   std::unordered_map<ENetPeer *, User> _users;
   std::vector<t_msg> _msgOut;
 };
+
+extern Server *g_serverInstance;
+void signalHandler(int signum);
 
 #endif

@@ -1,3 +1,4 @@
+#include <csignal>
 #include <iostream>
 #include <stdexcept>
 
@@ -6,6 +7,8 @@
 int main() {
   try {
     Server server;
+    g_serverInstance = &server;
+    std::signal(SIGINT, signalHandler);
     server.init();
     server.run();
   } catch (const std::exception &e) {

@@ -15,7 +15,7 @@ public:
   int getId(void) const;
   void send(ENetPacket *packet) const;
   ENetPeer *getPeer() const;
-  void updatePlayer(Vector &pos, Vector &vel);
+  void updatePlayer(float angle, Vector &pos, Vector &vel);
 
 private:
   int _id;

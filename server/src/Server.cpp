@@ -10,14 +10,27 @@
 #include "Message.hpp"
 #include "Server.hpp"
 
-Server::Server() : _server(nullptr) {
+Server *g_serverInstance = nullptr;
+
+void signalHandler(int signum) {
+  (void)signum;
+  if (g_serverInstance) {
+    std::cout << "Stoping..." << std::endl;
+    g_serverInstance->stop();
+  }
+}
+
+Server::Server() : _running(true), _server(nullptr) {
   if (enet_initialize() != 0) {
     throw std::runtime_error("An error occurred while initializing ENet.");
   }
   atexit(enet_deinitialize);
 }
 
-Server::~Server() { deinit(); }
+Server::~Server() {
+  std::cout << "Destroying server" << std::endl;
+  deinit();
+}
 
 void Server::init() {
   _address.host = ENET_HOST_ANY;
@@ -38,6 +51,28 @@ void Server::deinit() {
     _server = nullptr;
   }
 }
+
+void Server::stop() {
+  _running = false;
+  _disconnectAllClients();
+}
+
+void Server::_disconnectAllClients() {
+  for (auto &user : _users) {
+    enet_peer_disconnect(user.first, 0); // Send disconnect signal to client
+  }
+  ENetEvent event;
+  while (enet_host_service(_server, &event, 3000) > 0) {
+    switch (event.type) {
+    case ENET_EVENT_TYPE_DISCONNECT:
+      _handleDisconnect(event);
+      break;
+    default:
+      break;
+    }
+  }
+}
+
 void Server::run() {
   int tickRate = 120;
   ENetEvent event;
@@ -45,7 +80,7 @@ void Server::run() {
   auto tickDuration =
       std::chrono::milliseconds(1000 / tickRate); // Duration of each tick
 
-  while (true) {
+  while (true && _running) {
     auto currentTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> timeSinceLastTick =
         currentTime - lastTick;
@@ -80,37 +115,6 @@ void Server::run() {
   }
 }
 
-/*void Server::run() {*/
-/*  int tickRate = 60;*/
-/*  ENetEvent event;*/
-/*  auto lastTick = std::chrono::high_resolution_clock::now();*/
-/*  while (true) {*/
-/*    _sendGameSateToAll();*/
-/*    _msgOutProcess();*/
-/*    while (enet_host_service(_server, &event, 0) > 0) {*/
-/*      switch (event.type) {*/
-/*      case ENET_EVENT_TYPE_CONNECT:*/
-/*        _handleConnect(event);*/
-/*        break;*/
-/*      case ENET_EVENT_TYPE_RECEIVE:*/
-/*        _handleReceive(event);*/
-/*        break;*/
-/*      case ENET_EVENT_TYPE_DISCONNECT:*/
-/*        _handleDisconnect(event);*/
-/*        break;*/
-/*      default:*/
-/*        std::cout << "WEIRD " << event.type << std::endl;*/
-/*        break;*/
-/*      }*/
-/*    }*/
-/*    _msgOutClean();*/
-/*    auto currentTime = std::chrono::high_resolution_clock::now();*/
-/*    std::chrono::duration<double, std::milli> timeSinceLastTick =*/
-/*        currentTime - lastTick;*/
-/*    //add code here*/
-/*  }*/
-/*}*/
-
 void Server::_msgOutProcess(void) {
   for (auto &msg : _msgOut) {
     if (msg.peer == nullptr)
@@ -126,7 +130,6 @@ void Server::_msgOutProcess(void) {
 void Server::_msgOutClean(void) {
   auto should_remove = [](t_msg &msg) {
     if (msg.processed) {
-      /*enet_packet_destroy(msg.packet);*/
       return true;
     }
     return false;
@@ -182,7 +185,8 @@ void Server::_handleReceive(ENetEvent &event) {
     }
     MessagePlayerUpdate *msgUpdate =
         (MessagePlayerUpdate *)(event.packet->data + sizeof(MessageHeader));
-    _users[event.peer].updatePlayer(msgUpdate->pos, msgUpdate->vel);
+    _users[event.peer].updatePlayer(msgUpdate->angle, msgUpdate->pos,
+                                    msgUpdate->vel);
     break;
   }
   default:
@@ -192,9 +196,8 @@ void Server::_handleReceive(ENetEvent &event) {
 }
 
 void Server::_handleDisconnect(ENetEvent &event) {
-  std::cout << "Client disconnected." << std::endl;
-
   int userId = _users[event.peer].getId();
+  std::cout << "Player " << userId << " disconnected." << std::endl;
   _users.erase(event.peer);
 
   MessagePlayerDisco msg = {userId};
@@ -223,6 +226,7 @@ MessageGameState Server::_craftMsgGameState(void) {
       std::cout << msg.nplayer << ": too much players !";
       break;
     }
+    msg.players[i].angle = u.second.player.getAngle();
     msg.players[i].vel = u.second.player.getVel();
     msg.players[i].pos = u.second.player.getPos();
     msg.players[i].id = u.second.getId();

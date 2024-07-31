@@ -3,7 +3,6 @@
 #include <enet/enet.h>
 #include <iostream>
 #include <stdexcept>
-#include <x86gprintrin.h>
 
 #include "Client.hpp"
 #include "Engine.hpp"
@@ -102,15 +101,12 @@ void Client::sendMessage(const std::string &message) {
 
 void Client::sendMessage(ENetPacket *packet) {
   if (_peer != nullptr) {
-    enet_peer_send(_peer, 0, packet);
+    if (enet_peer_send(_peer, 0, packet) < 0)
+      enet_packet_destroy(packet);
   }
-  /*enet_host_flush(_client);*/
 }
 
 void Client::_handleReceive(ENetEvent &event, Engine &eng) {
-  /*std::cout << "A packet of length " << event.packet->dataLength*/
-  /*          << " containing \"" << event.packet->data << "\" was received."*/
-  /*          << std::endl;*/
   MessageHeader *msgHeader = (MessageHeader *)(event.packet->data);
   void *msgBody = (void *)(event.packet->data + sizeof(MessageHeader));
   switch (msgHeader->type) {
@@ -126,7 +122,7 @@ void Client::_handleReceive(ENetEvent &event, Engine &eng) {
   }
   case PLR_UPDATE: {
     MessagePlayerUpdate *msgUpdate = (MessagePlayerUpdate *)msgBody;
-    eng.updatePlayer(msgUpdate->id, msgUpdate->pos, msgUpdate->vel);
+    eng.updatePlayer(msgUpdate);
     break;
   }
   case PLR_ID: {
@@ -139,7 +135,7 @@ void Client::_handleReceive(ENetEvent &event, Engine &eng) {
     MessageGameState *msgSate = (MessageGameState *)msgBody;
     for (int i = 0; i < msgSate->nplayer; i++) {
       MessagePlayerUpdate *plr = &msgSate->players[i];
-      eng.updatePlayer(plr->id, plr->pos, plr->vel);
+      eng.updatePlayer(plr);
     }
   }
   default:

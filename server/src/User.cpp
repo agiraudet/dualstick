@@ -20,7 +20,8 @@ void User::send(ENetPacket *packet) const {
 
 ENetPeer *User::getPeer() const { return _peer; }
 
-void User::updatePlayer(Vector &pos, Vector &vel) {
+void User::updatePlayer(float angle, Vector &pos, Vector &vel) {
+  player.setAngle(angle);
   player.setPos(pos);
   player.setVel(vel);
 }

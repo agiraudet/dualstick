@@ -31,14 +31,18 @@ public:
 
   void setFpsTarget(float target);
   void capFps(void);
+  void start(void);
   float getFps(void) const;
 
 private:
-  int _countedFrame;
-  Uint32 _lastFrame;
+  bool _started;
   float _target;
-  float _tickPerFrame;
-  Uint32 _startTime;
+  float _fps;
+  Uint32 _startTicks;
+  Uint32 _frameCount;
+  Uint32 _fpsUpdateInterval;
+  Uint32 _targetFrameTime;
+  Uint32 _lastFrameTicks;
 };
 
 #endif

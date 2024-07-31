@@ -27,6 +27,7 @@ struct MessagePlayerDisco {
 
 struct MessagePlayerUpdate {
   int id;
+  float angle;
   Vector pos;
   Vector vel;
 };

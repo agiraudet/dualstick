@@ -6,6 +6,8 @@
 
 #define PLAYER_MAXSPEED 800.f
 
+#define MOVE_ABS
+
 enum PlayerInput { UP, DOWN, LEFT, RIGHT, N_INPUT };
 
 class Player {
