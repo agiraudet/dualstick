@@ -8,11 +8,13 @@
 #include <SDL2/SDL_video.h>
 #include <unordered_map>
 
+#include "Atlas.hpp"
 #include "Client.hpp"
+#include "MapRend.hpp"
 #include "Message.hpp"
 #include "Player.hpp"
 
-#define SCR_WIDTH 720
+#define SCR_WIDTH 640
 #define SCR_HEIGHT 480
 
 class Engine {
@@ -28,10 +30,12 @@ public:
   void updatePlayer(MessagePlayerUpdate *msg);
 
 private:
+  void _fillAtlas(void);
   void _getEvent(void);
   void _render(void);
   void _processInput(SDL_Keycode &sym, bool state);
   void _NotifyPlayerUpdate(void);
+  void _centerCameraOnPlayer(void);
 
 private:
   Client _client;
@@ -41,9 +45,9 @@ private:
   std::unordered_map<int, Player> _otherPlayers;
   SDL_Window *_window;
   SDL_Renderer *_renderer;
-  // TMP
-  SDL_Texture *_texPlayer;
-  SDL_Texture *_texOther;
+  Atlas *_atlas;
+  SDL_Rect _camera;
+  MapRend *_map;
 };
 
 #endif

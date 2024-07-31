@@ -1,4 +1,6 @@
 #include "Engine.hpp"
+#include "Atlas.hpp"
+#include "MapRend.hpp"
 #include "Timer.hpp"
 
 #include <SDL2/SDL_events.h>
@@ -17,21 +19,33 @@
 Engine::Engine(void)
     : _client(Client()), _alive(true),
       _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99)}),
-      _window(nullptr), _renderer(nullptr) {
+      _window(nullptr), _renderer(nullptr), _atlas(nullptr),
+      _camera({0, 0, SCR_WIDTH, SCR_HEIGHT}) {
   SDL_Init(SDL_INIT_VIDEO);
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, SCR_WIDTH, SCR_HEIGHT,
                              SDL_WINDOW_SHOWN);
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
-  // TMP
-  _texPlayer = IMG_LoadTexture(_renderer, "../assets/player.png");
-  _texOther = IMG_LoadTexture(_renderer, "../assets/other.png");
+  _atlas = new Atlas(_renderer);
+  _fillAtlas();
+  _map = new MapRend(_atlas, "tiles");
+  _map->loadFromFile("../assets/map");
+  _map->createTiles();
+  Vector initPos(320.f, 320.f);
+  _player.setPos(initPos);
 }
 
 Engine::~Engine(void) {
+  delete _atlas;
   SDL_DestroyRenderer(_renderer);
   SDL_DestroyWindow(_window);
   SDL_Quit();
+}
+
+void Engine::_fillAtlas(void) {
+  _atlas->loadTexture("other", "../assets/other.png");
+  _atlas->loadTexture("player", "../assets/player.png");
+  _atlas->loadTexture("tiles", "../assets/tiles.png", 80, 80);
 }
 
 int Engine::connect(const std::string &host, enet_uint16 port) {
@@ -44,15 +58,21 @@ int Engine::connect(const std::string &host, enet_uint16 port) {
   return 0;
 }
 
+void Engine::_centerCameraOnPlayer(void) {
+  _camera.x = (_player.getPos().x + 25) - (float)SCR_WIDTH / 2.f;
+  _camera.y = (_player.getPos().y + 25) - (float)SCR_HEIGHT / 2.f;
+}
+
 void Engine::run(void) {
   TimerFps fpsTimer(60.f);
   while (_alive) {
     _client.getEvent(*this);
     _getEvent();
     _player.applyInput();
+    _centerCameraOnPlayer();
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
-    _player.aimAngle(mouseX, mouseY);
+    _player.aimAngle(mouseX + _camera.x, mouseY + _camera.y);
     _NotifyPlayerUpdate();
     _render();
     fpsTimer.capFps();
@@ -114,21 +134,15 @@ void Engine::_render(void) {
   SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
   SDL_RenderClear(_renderer);
 
-  SDL_Rect rect = {(int)_player.getPos().x - 25, (int)_player.getPos().y - 25,
-                   50, 50};
-  SDL_Point center = {rect.w / 2, rect.h / 2};
-  SDL_RenderCopyEx(_renderer, _texPlayer, NULL, &rect, _player.getAngle(),
-                   &center, SDL_FLIP_NONE);
+  _map->render(_camera);
 
+  _atlas->drawTexture("player", _player.getPos().x - 25 - _camera.x,
+                      _player.getPos().y - 25 - _camera.y, _player.getAngle());
   for (const auto &p : _otherPlayers) {
-    rect.x = p.second.getPos().x - 25;
-    rect.y = p.second.getPos().y - 25;
-    center.x = rect.w / 2;
-    center.y = rect.h / 2;
-    SDL_RenderCopyEx(_renderer, _texOther, NULL, &rect, p.second.getAngle(),
-                     &center, SDL_FLIP_NONE);
+    _atlas->drawTexture("other", p.second.getPos().x - 25 - _camera.x,
+                        p.second.getPos().y - 25 - _camera.y,
+                        p.second.getAngle());
   }
-
   SDL_RenderPresent(_renderer);
 }
 
