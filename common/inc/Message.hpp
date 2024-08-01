@@ -9,8 +9,9 @@
 
 #define MESSAGE_VERSION 1
 #define MAX_N_PLAYER 4
+#define MSGMAP_DATALEN 512
 
-enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID, GAME_STATE };
+enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID, GAME_STATE, MAP };
 
 struct MessageHeader {
   MessageType type;
@@ -39,6 +40,14 @@ struct MessagePlayerID {
 struct MessageGameState {
   int nplayer;
   MessagePlayerUpdate players[MAX_N_PLAYER];
+};
+
+struct MessageMap {
+  int idPack;
+  int nPack;
+  int width;
+  int dataLen;
+  int data[MSGMAP_DATALEN];
 };
 
 template <typename T>

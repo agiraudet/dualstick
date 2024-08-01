@@ -2,9 +2,11 @@
 #define SERVER_HPP
 
 #include <enet/enet.h>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "Map.hpp"
 #include "Message.hpp"
 #include "User.hpp"
 
@@ -29,7 +31,7 @@ private:
   void _msgOutProcess(void);
   void _msgOutClean(void);
   void _msgOutAdd(ENetPeer *perr, ENetPacket *packet, bool ccAll);
-
+  void _loadMap(std::string const &path);
   void _disconnectAllClients(void);
   void _handleConnect(ENetEvent &event);
   void _handleReceive(ENetEvent &event);
@@ -37,11 +39,13 @@ private:
   void _distributeToOther(ENetPeer *author, ENetPacket *packet);
   void _distributeToAll(ENetPacket *packet);
   void _sendGameSateToAll(void);
+  void _sendMap(ENetPeer *peer);
   MessageGameState _craftMsgGameState(void);
 
   bool _running;
   ENetAddress _address;
   ENetHost *_server;
+  Map _map;
   std::unordered_map<ENetPeer *, User> _users;
   std::vector<t_msg> _msgOut;
 };

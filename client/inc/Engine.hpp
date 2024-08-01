@@ -17,6 +17,8 @@
 #define SCR_WIDTH 640
 #define SCR_HEIGHT 480
 
+enum engState { STOPPED, RUNNING, LOADING };
+
 class Engine {
 public:
   Engine(void);
@@ -28,6 +30,7 @@ public:
   void removePlayer(int id);
   void addPlayer(int id);
   void updatePlayer(MessagePlayerUpdate *msg);
+  void receivedMap(MessageMap &msg);
 
 private:
   void _fillAtlas(void);
@@ -39,7 +42,7 @@ private:
 
 private:
   Client _client;
-  bool _alive;
+  engState _state;
   Player _player;
   MessagePlayerUpdate _msgPlayerUpdate;
   std::unordered_map<int, Player> _otherPlayers;

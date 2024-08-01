@@ -17,7 +17,7 @@
 #include <iostream>
 
 Engine::Engine(void)
-    : _client(Client()), _alive(true),
+    : _client(Client()), _state(LOADING),
       _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99)}),
       _window(nullptr), _renderer(nullptr), _atlas(nullptr),
       _camera({0, 0, SCR_WIDTH, SCR_HEIGHT}) {
@@ -29,8 +29,6 @@ Engine::Engine(void)
   _atlas = new Atlas(_renderer);
   _fillAtlas();
   _map = new MapRend(_atlas, "tiles");
-  _map->loadFromFile("../assets/map");
-  _map->createTiles();
   Vector initPos(320.f, 320.f);
   _player.setPos(initPos);
 }
@@ -58,6 +56,17 @@ int Engine::connect(const std::string &host, enet_uint16 port) {
   return 0;
 }
 
+void Engine::receivedMap(MessageMap &msg) {
+  _map->rcvMsg(msg);
+  if (_map->countMissingMsg() == 0 && !_map->isLoaded()) {
+    if (_map->loadFromMsg()) {
+      _map->createTiles();
+      _state = RUNNING;
+      printf("Map: loaded successfully\n");
+    }
+  }
+}
+
 void Engine::_centerCameraOnPlayer(void) {
   _camera.x = (_player.getPos().x + 25) - (float)SCR_WIDTH / 2.f;
   _camera.y = (_player.getPos().y + 25) - (float)SCR_HEIGHT / 2.f;
@@ -65,16 +74,18 @@ void Engine::_centerCameraOnPlayer(void) {
 
 void Engine::run(void) {
   TimerFps fpsTimer(60.f);
-  while (_alive) {
+  while (_state != STOPPED) {
     _client.getEvent(*this);
     _getEvent();
-    _player.applyInput();
-    _centerCameraOnPlayer();
-    int mouseX, mouseY;
-    SDL_GetMouseState(&mouseX, &mouseY);
-    _player.aimAngle(mouseX + _camera.x, mouseY + _camera.y);
-    _NotifyPlayerUpdate();
-    _render();
+    if (_state == RUNNING) {
+      _player.applyInput();
+      _centerCameraOnPlayer();
+      int mouseX, mouseY;
+      SDL_GetMouseState(&mouseX, &mouseY);
+      _player.aimAngle(mouseX + _camera.x, mouseY + _camera.y);
+      _NotifyPlayerUpdate();
+      _render();
+    }
     fpsTimer.capFps();
   }
 }
@@ -124,7 +135,7 @@ void Engine::_getEvent(void) {
   SDL_Event e;
   while (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT)
-      _alive = false;
+      _state = STOPPED;
     else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
       _processInput(e.key.keysym.sym, (e.type == SDL_KEYDOWN));
   }

@@ -137,6 +137,13 @@ void Client::_handleReceive(ENetEvent &event, Engine &eng) {
       MessagePlayerUpdate *plr = &msgSate->players[i];
       eng.updatePlayer(plr);
     }
+    break;
+  }
+  case MAP: {
+    MessageMap msgMap =
+        deserializeMessage<MessageMap>((const char *)event.packet->data);
+    eng.receivedMap(msgMap);
+    break;
   }
   default:
     break;

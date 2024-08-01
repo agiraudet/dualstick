@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <bits/chrono.h>
 #include <chrono>
+#include <cstdio>
 #include <enet/enet.h>
 #include <iostream>
 #include <ratio>
@@ -25,11 +26,19 @@ Server::Server() : _running(true), _server(nullptr) {
     throw std::runtime_error("An error occurred while initializing ENet.");
   }
   atexit(enet_deinitialize);
+  _loadMap("../assets/map");
 }
 
 Server::~Server() {
   std::cout << "Destroying server" << std::endl;
   deinit();
+}
+
+void Server::_loadMap(std::string const &path) {
+  if (!_map.loadFromFile(path))
+    throw std::runtime_error("Failed to load map");
+  if (!_map.craftMsg())
+    throw std::runtime_error("Failed to craft map msg");
 }
 
 void Server::init() {
@@ -147,6 +156,15 @@ void Server::_sendGameSateToAll(void) {
   _msgOutAdd(nullptr, packageMessage(_craftMsgGameState(), GAME_STATE), true);
 }
 
+void Server::_sendMap(ENetPeer *peer) {
+  std::vector<MessageMap> const &msgMap = _map.getMsg();
+  for (auto const &msg : msgMap) {
+    ENetPacket *packet = packageMessage(msg, MAP);
+    printf("Snd map packet %d/%d\n", msg.idPack + 1, msg.nPack);
+    _msgOutAdd(peer, packet, false);
+  }
+}
+
 void Server::_handleConnect(ENetEvent &event) {
   User newUser(event.peer);
   _users[event.peer] = newUser;
@@ -166,6 +184,7 @@ void Server::_handleConnect(ENetEvent &event) {
   ENetPacket *packetId = packageMessage(msgId, PLR_ID);
   _msgOutAdd(event.peer, packetId, false);
 
+  _sendMap(event.peer);
   printf("New player got send id %d\n", newUser.getId());
 }
 
