@@ -35,8 +35,8 @@ void Player::move(Map &map) {
       currentTime - _lastMove;
   double deltaTime = timeSinceMove.count() / 1000.0;
   Vector futurPos = _position + _velocity * deltaTime;
-  if (!map.boxIsColliding(futurPos.y - (float)_size / 2.f,
-                          futurPos.x - (float)_size / 2.f, _size, _size)) {
+  if (!map.boxIsColliding(futurPos.x - (float)_size / 2.f,
+                          futurPos.y - (float)_size / 2.f, _size, _size)) {
     _position = futurPos;
   }
   _lastMove = currentTime;

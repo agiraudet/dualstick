@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <utility>
 
-Map::Map() : _width(0), _height(0), _tileSize(80), _loaded(false) {}
+Map::Map() : _width(0), _height(0), _tileSize(32), _loaded(false) {}
 
 Map::~Map() {}
 
@@ -68,10 +68,10 @@ bool Map::loadFromMsg(void) {
         _height++;
       }
     }
-    if (!row.empty()) {
-      _mapData.push_back(row);
-      _height++;
-    }
+    /*if (!row.empty()) {*/
+    /*  _mapData.push_back(row);*/
+    /*  _height++;*/
+    /*}*/
   }
   _loaded = true;
   return true;
@@ -158,4 +158,10 @@ std::vector<int> Map::_parseLine(const std::string &line) const {
   return row;
 }
 
-bool Map::_checkCollision(int tileIndex) const { return tileIndex == 0; }
+bool Map::_checkCollision(int tileIndex) const {
+  if (tileIndex >= 46 && tileIndex <= 49)
+    return false;
+  else if (tileIndex >= 56)
+    return false;
+  return true;
+}

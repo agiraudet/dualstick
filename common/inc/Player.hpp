@@ -6,7 +6,7 @@
 #include <chrono>
 
 #define PLAYER_MAXSPEED 800.f
-#define PLAYER_SIZE 50
+#define PLAYER_SIZE 20
 
 #define MOVE_ABS
 

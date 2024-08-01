@@ -30,7 +30,7 @@ Engine::Engine(void)
   _atlas = new Atlas(_renderer);
   _fillAtlas();
   _map = new MapRend(_atlas, "tiles");
-  Vector initPos(320.f, 320.f);
+  Vector initPos(64.f, 64.f);
   _player.setPos(initPos);
 }
 
@@ -44,7 +44,7 @@ Engine::~Engine(void) {
 void Engine::_fillAtlas(void) {
   _atlas->loadTexture("other", "../assets/other.png");
   _atlas->loadTexture("player", "../assets/player.png");
-  _atlas->loadTexture("tiles", "../assets/tiles.png", 80, 80);
+  _atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);
 }
 
 int Engine::connect(const std::string &host, enet_uint16 port) {

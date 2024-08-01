@@ -38,7 +38,7 @@ void MapRend::render(SDL_Rect &camera) {
 /*  for (auto coord : _debugCoord) {*/
 /*    Tile &tile = _tileData[coord.first][coord.second];*/
 /*    if (SDL_HasIntersection(&camera, &tile.rect) == SDL_TRUE) {*/
-/*      _atlas->drawTextureF(_tileSet, 15, tile.rect.x - camera.x,*/
+/*      _atlas->drawTextureF(_tileSet, 2, tile.rect.x - camera.x,*/
 /*                           tile.rect.y - camera.y);*/
 /*    }*/
 /*  }*/
