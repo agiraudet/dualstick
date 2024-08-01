@@ -41,6 +41,9 @@ private:
   void _centerCameraOnPlayer(void);
 
 private:
+  void debug_tilesbox(void);
+
+private:
   Client _client;
   engState _state;
   Player _player;

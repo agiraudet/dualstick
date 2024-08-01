@@ -1,10 +1,12 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
+#include "Map.hpp"
 #include "Vector.hpp"
 #include <chrono>
 
 #define PLAYER_MAXSPEED 800.f
+#define PLAYER_SIZE 50
 
 #define MOVE_ABS
 
@@ -17,6 +19,7 @@ public:
   ~Player(void);
 
   void move(void);
+  void move(Map &map);
   void setId(int id);
   int getId(void) const;
   void setPos(Vector &pos);
@@ -26,6 +29,7 @@ public:
   float getAngle(void) const;
   Vector const &getPos(void) const;
   Vector const &getVel(void) const;
+  int getSize(void) const;
   void setInput(PlayerInput input, bool state);
   void applyInput(void);
 
@@ -39,6 +43,7 @@ private:
   float _angle;
   float _maxSpeed;
   bool _inputs[N_INPUT];
+  int _size;
   std::chrono::high_resolution_clock::time_point _lastMove;
 };
 

@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <cstdio>
@@ -68,8 +69,10 @@ void Engine::receivedMap(MessageMap &msg) {
 }
 
 void Engine::_centerCameraOnPlayer(void) {
-  _camera.x = (_player.getPos().x + 25) - (float)SCR_WIDTH / 2.f;
-  _camera.y = (_player.getPos().y + 25) - (float)SCR_HEIGHT / 2.f;
+  _camera.x = (_player.getPos().x + (float)_player.getSize() / 2) -
+              (float)SCR_WIDTH / 2.f;
+  _camera.y = (_player.getPos().y + (float)_player.getSize() / 2) -
+              (float)SCR_HEIGHT / 2.f;
 }
 
 void Engine::run(void) {
@@ -79,6 +82,7 @@ void Engine::run(void) {
     _getEvent();
     if (_state == RUNNING) {
       _player.applyInput();
+      _player.move(*_map);
       _centerCameraOnPlayer();
       int mouseX, mouseY;
       SDL_GetMouseState(&mouseX, &mouseY);
@@ -146,15 +150,36 @@ void Engine::_render(void) {
   SDL_RenderClear(_renderer);
 
   _map->render(_camera);
+  /*_map->debug_render(_camera);*/
 
-  _atlas->drawTexture("player", _player.getPos().x - 25 - _camera.x,
-                      _player.getPos().y - 25 - _camera.y, _player.getAngle());
+  _atlas->drawTexture("player",
+                      _player.getPos().x - _player.getSize() / 2 - _camera.x,
+                      _player.getPos().y - _player.getSize() / 2 - _camera.y,
+                      _player.getAngle());
   for (const auto &p : _otherPlayers) {
-    _atlas->drawTexture("other", p.second.getPos().x - 25 - _camera.x,
-                        p.second.getPos().y - 25 - _camera.y,
-                        p.second.getAngle());
+    _atlas->drawTexture(
+        "other", p.second.getPos().x - p.second.getSize() / 2 - _camera.x,
+        p.second.getPos().y - p.second.getSize() / 2 - _camera.y,
+        p.second.getAngle());
   }
   SDL_RenderPresent(_renderer);
+}
+
+void Engine::debug_tilesbox(void) {
+  int s = _player.getSize();
+  int hs = s / 2;
+  int px = _player.getPos().x;
+  int py = _player.getPos().y;
+  SDL_Rect tl = {px - hs - _camera.x, py - hs - _camera.y, s, s};
+  SDL_Rect tr = {px + hs - _camera.x, py - hs - _camera.y, s, s};
+  SDL_Rect bl = {px - hs - _camera.x, py + hs - _camera.y, s, s};
+  SDL_Rect br = {px + hs - _camera.x, py + hs - _camera.y, s, s};
+
+  SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
+  SDL_RenderDrawRect(_renderer, &tl);
+  SDL_RenderDrawRect(_renderer, &tr);
+  SDL_RenderDrawRect(_renderer, &bl);
+  SDL_RenderDrawRect(_renderer, &br);
 }
 
 void Engine::_processInput(SDL_Keycode &sym, bool state) {

@@ -5,12 +5,13 @@
 #include <cstdio>
 #include <ctime>
 
-Player::Player(void) : _id(0), _maxSpeed(PLAYER_MAXSPEED) {
+Player::Player(void) : _id(0), _maxSpeed(PLAYER_MAXSPEED), _size(PLAYER_SIZE) {
   _resetInputs();
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
-Player::Player(int id) : _id(id), _maxSpeed(PLAYER_MAXSPEED) {
+Player::Player(int id)
+    : _id(id), _maxSpeed(PLAYER_MAXSPEED), _size(PLAYER_SIZE) {
   _resetInputs();
   _lastMove = std::chrono::high_resolution_clock::now();
 }
@@ -28,6 +29,19 @@ void Player::move(void) {
   _lastMove = currentTime;
 }
 
+void Player::move(Map &map) {
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> timeSinceMove =
+      currentTime - _lastMove;
+  double deltaTime = timeSinceMove.count() / 1000.0;
+  Vector futurPos = _position + _velocity * deltaTime;
+  if (!map.boxIsColliding(futurPos.y - (float)_size / 2.f,
+                          futurPos.x - (float)_size / 2.f, _size, _size)) {
+    _position = futurPos;
+  }
+  _lastMove = currentTime;
+}
+
 int Player::getId(void) const { return _id; }
 
 void Player::setPos(Vector &pos) { _position = pos; }
@@ -37,6 +51,8 @@ void Player::setVel(Vector &vel) { _velocity = vel; }
 Vector const &Player::getPos(void) const { return _position; }
 
 Vector const &Player::getVel(void) const { return _velocity; }
+
+int Player::getSize(void) const { return _size; };
 
 float Player::getAngle(void) const { return _angle; }
 
@@ -63,7 +79,6 @@ void Player::applyInput(void) {
   if (_inputs[RIGHT])
     _velocity += Vector(speed, 0);
   _velocity.capIntensity(_maxSpeed * _maxSpeed);
-  move();
 }
 #else
 void Player::applyInput(void) {
@@ -85,7 +100,6 @@ void Player::applyInput(void) {
     _velocity += Vector(cos(rightAngle) * speed, sin(rightAngle) * speed);
   }
   _velocity.capIntensity(_maxSpeed * _maxSpeed);
-  move();
 }
 #endif // MOVE_ABS
 

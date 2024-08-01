@@ -5,8 +5,9 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
-Map::Map() : _width(0), _height(0), _loaded(false) {}
+Map::Map() : _width(0), _height(0), _tileSize(80), _loaded(false) {}
 
 Map::~Map() {}
 
@@ -45,6 +46,7 @@ bool Map::loadFromMsg(void) {
   }
   _mapData.clear();
   _width = _msgMap[0].width;
+  _tileSize = _msgMap[0].tileSize;
   _height = 0;
   std::vector<int> row;
   for (int n = 0; n < nMsg; n++) {
@@ -84,7 +86,7 @@ bool Map::craftMsg(void) {
   int r = 0;
   _msgMap.clear();
   for (int i = 0; i < nPack; i++) {
-    MessageMap msg = {i, nPack, _width, 0, {0}};
+    MessageMap msg = {i, nPack, _width, _tileSize, 0, {0}};
     for (int d = 0; d < MSGMAP_DATALEN; d++) {
       msg.data[d] = _mapData[row][r++];
       msg.dataLen++;
@@ -114,12 +116,16 @@ int Map::countMissingMsg(void) {
   return _msgMap[0].nPack - nMsg;
 }
 
+void Map::setTileSize(int size) { _tileSize = size; }
+
 std::vector<MessageMap> const &Map::getMsg(void) { return _msgMap; }
 
-int Map::getTile(int x, int y) const {
+int Map::getTile(int x, int y) {
   if (x < 0 || x >= _width || y < 0 || y >= _height) {
-    throw std::out_of_range("Position out of bounds");
+    /*throw std::out_of_range("Position out of bounds");*/
+    return 0;
   }
+  /*_debugCoord.emplace_back(x, y);*/
   return _mapData[y][x];
 }
 
@@ -127,9 +133,20 @@ int Map::getWidth() const { return _width; }
 
 int Map::getHeight() const { return _height; }
 
-bool Map::isCollidable(int x, int y) const {
-  return _checkCollision(getTile(x, y));
+int Map::getTileSize() const { return _tileSize; }
+
+bool Map::boxIsColliding(int x, int y, int w, int h) {
+  /*_debugCoord.clear();*/
+  int tileTL = getTile(x / _tileSize, y / _tileSize);
+  int tileTR = getTile((x + w) / _tileSize, y / _tileSize);
+  int tileBL = getTile(x / _tileSize, (y + h) / _tileSize);
+  int tileBR = getTile((x + w) / _tileSize, (y + h) / _tileSize);
+  /*printf("%d %d %d %d\n", tileTL, tileTR, tileBR, tileBL);*/
+  return (_checkCollision(tileTL) || _checkCollision(tileTR) ||
+          _checkCollision(tileBL) || _checkCollision(tileBR));
 }
+
+bool Map::isCollidable(int x, int y) { return _checkCollision(getTile(x, y)); }
 
 std::vector<int> Map::_parseLine(const std::string &line) const {
   std::vector<int> row;
@@ -141,4 +158,4 @@ std::vector<int> Map::_parseLine(const std::string &line) const {
   return row;
 }
 
-bool Map::_checkCollision(int tileIndex) const { return tileIndex >= 3; }
+bool Map::_checkCollision(int tileIndex) const { return tileIndex == 0; }

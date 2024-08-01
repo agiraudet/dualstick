@@ -5,14 +5,8 @@
 MapRend::MapRend(Atlas *atlas, const std::string &tileSet)
     : _atlas(atlas), _tileSet(tileSet) {
   const Texture &tileTexture = _atlas->getTexture(tileSet);
-  setTileSize(tileTexture.frame.w, tileTexture.frame.h);
-}
-
-void MapRend::setTileSize(int tileWidth, int tileHeight) {
-  _tileWidth = tileWidth;
-  _tileHeight = tileHeight;
-  _pixelWidth = tileWidth * _width;
-  _pixelHeight = tileHeight * _height;
+  _pixelWidth = _tileSize * _width;
+  _pixelHeight = _tileSize * _height;
 }
 
 void MapRend::createTiles(void) {
@@ -20,7 +14,7 @@ void MapRend::createTiles(void) {
   for (int y = 0; y < _height; y++) {
     line.clear();
     for (int x = 0; x < _width; x++) {
-      Tile tile = {{_tileWidth * x, _tileHeight * y, _tileWidth, _tileHeight},
+      Tile tile = {{_tileSize * x, _tileSize * y, _tileSize, _tileSize},
                    getTile(x, y)};
       line.push_back(tile);
     }
@@ -39,3 +33,13 @@ void MapRend::render(SDL_Rect &camera) {
     }
   }
 }
+
+/*void MapRend::debug_render(SDL_Rect &camera) {*/
+/*  for (auto coord : _debugCoord) {*/
+/*    Tile &tile = _tileData[coord.first][coord.second];*/
+/*    if (SDL_HasIntersection(&camera, &tile.rect) == SDL_TRUE) {*/
+/*      _atlas->drawTextureF(_tileSet, 15, tile.rect.x - camera.x,*/
+/*                           tile.rect.y - camera.y);*/
+/*    }*/
+/*  }*/
+/*}*/

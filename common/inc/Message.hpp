@@ -46,6 +46,7 @@ struct MessageMap {
   int idPack;
   int nPack;
   int width;
+  int tileSize;
   int dataLen;
   int data[MSGMAP_DATALEN];
 };

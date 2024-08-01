@@ -14,15 +14,15 @@ class MapRend : public Map {
 
 public:
   MapRend(Atlas *atlas, const std::string &tileSet);
-  void setTileSize(int tileWidth, int tileHeight);
   void createTiles(void);
   void render(SDL_Rect &camera);
+
+  /*public:*/
+  /*  void debug_render(SDL_Rect &camera);*/
 
 private:
   Atlas *_atlas;
   const std::string _tileSet;
-  int _tileWidth;
-  int _tileHeight;
   int _pixelWidth;
   int _pixelHeight;
   std::vector<std::vector<Tile>> _tileData;
