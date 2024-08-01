@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
 
 Map::Map() : _width(0), _height(0), _tileSize(32), _loaded(false) {}
 
@@ -68,10 +67,10 @@ bool Map::loadFromMsg(void) {
         _height++;
       }
     }
-    /*if (!row.empty()) {*/
-    /*  _mapData.push_back(row);*/
-    /*  _height++;*/
-    /*}*/
+  }
+  if (!row.empty()) {
+    _mapData.push_back(row);
+    _height++;
   }
   _loaded = true;
   return true;

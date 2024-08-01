@@ -5,7 +5,7 @@
 #include "Vector.hpp"
 #include <chrono>
 
-#define PLAYER_MAXSPEED 800.f
+#define PLAYER_MAXSPEED 400.f
 #define PLAYER_SIZE 20
 
 #define MOVE_ABS
