@@ -7,7 +7,10 @@ INC_DIR         := ./inc $(CMN_DIR)/inc
 
 CMN_BUILD_DIR   := $(CMN_DIR)/build
 CMN_SRCS_DIR    := $(CMN_DIR)/src
-CMN_SRCS        := Map.cpp \
+CMN_SRCS        := Entity.cpp \
+									 Map.cpp \
+									 Mob.cpp \
+									 MobFactory.cpp \
 									 Player.cpp \
 									 Vector.cpp
 CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))

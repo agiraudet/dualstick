@@ -4,8 +4,6 @@
 #include <enet/enet.h>
 #include <string>
 
-#include "Message.hpp"
-
 class Engine;
 
 class Client {
@@ -17,11 +15,12 @@ public:
   void deinit();
   void disconnect();
   void getEvent(Engine &eng);
-  void sendMessage(const std::string &message);
   void sendMessage(ENetPacket *packet);
 
 private:
-  void _handleReceive(ENetEvent &event, Engine &eng);
+  int _handleReceive(ENetEvent &event, Engine &eng);
+
+private:
   ENetHost *_client;
   ENetPeer *_peer;
 };

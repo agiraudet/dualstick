@@ -9,9 +9,20 @@
 
 #define MESSAGE_VERSION 1
 #define MAX_N_PLAYER 4
+#define MAX_N_MOB 25
 #define MSGMAP_DATALEN 512
 
-enum MessageType { PLR_CO, PLR_DISCO, PLR_UPDATE, PLR_ID, GAME_STATE, MAP };
+enum mobType { BASIC };
+
+enum MessageType {
+  PLR_CO,
+  PLR_DISCO,
+  PLR_UPDATE,
+  PLR_ID,
+  MOB_UPDATE,
+  GAME_STATE,
+  MAP
+};
 
 struct MessageHeader {
   MessageType type;
@@ -37,9 +48,19 @@ struct MessagePlayerID {
   int id;
 };
 
+struct MessageMobUpdate {
+  int id;
+  mobType type;
+  float angle;
+  Vector pos;
+  Vector vel;
+};
+
 struct MessageGameState {
   int nplayer;
   MessagePlayerUpdate players[MAX_N_PLAYER];
+  int nmob;
+  MessageMobUpdate mob[MAX_N_MOB];
 };
 
 struct MessageMap {

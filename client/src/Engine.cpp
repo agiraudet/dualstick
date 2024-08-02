@@ -1,7 +1,9 @@
 #include "Engine.hpp"
 #include "Atlas.hpp"
 #include "MapRend.hpp"
+#include "Message.hpp"
 #include "Timer.hpp"
+#include "Vector.hpp"
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_image.h>
@@ -41,12 +43,6 @@ Engine::~Engine(void) {
   SDL_Quit();
 }
 
-void Engine::_fillAtlas(void) {
-  _atlas->loadTexture("other", "../assets/other.png");
-  _atlas->loadTexture("player", "../assets/player.png");
-  _atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);
-}
-
 int Engine::connect(const std::string &host, enet_uint16 port) {
   try {
     _client.init(host, port);
@@ -55,24 +51,6 @@ int Engine::connect(const std::string &host, enet_uint16 port) {
     return -1;
   }
   return 0;
-}
-
-void Engine::receivedMap(MessageMap &msg) {
-  _map->rcvMsg(msg);
-  if (_map->countMissingMsg() == 0 && !_map->isLoaded()) {
-    if (_map->loadFromMsg()) {
-      _map->createTiles();
-      _state = RUNNING;
-      printf("Map: loaded successfully\n");
-    }
-  }
-}
-
-void Engine::_centerCameraOnPlayer(void) {
-  _camera.x = (_player.getPos().x + (float)_player.getSize() / 2) -
-              (float)SCR_WIDTH / 2.f;
-  _camera.y = (_player.getPos().y + (float)_player.getSize() / 2) -
-              (float)SCR_HEIGHT / 2.f;
 }
 
 void Engine::run(void) {
@@ -94,45 +72,10 @@ void Engine::run(void) {
   }
 }
 
-void Engine::_NotifyPlayerUpdate(void) {
-  Vector const &plrPos = _player.getPos();
-  Vector const &plrVel = _player.getVel();
-  float plrAngle = _player.getAngle();
-  _msgPlayerUpdate.id = _player.getId();
-  if (_msgPlayerUpdate.angle != plrAngle || _msgPlayerUpdate.pos != plrPos ||
-      _msgPlayerUpdate.vel != plrVel) {
-    _msgPlayerUpdate.angle = plrAngle;
-    _msgPlayerUpdate.pos = plrPos;
-    _msgPlayerUpdate.vel = plrVel;
-    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_UPDATE);
-    _client.sendMessage(pck);
-  }
-}
-
-void Engine::setPlayerId(int id) { _player.setId(id); }
-
-void Engine::removePlayer(int id) {
-  if (_otherPlayers.find(id) != _otherPlayers.end()) {
-    _otherPlayers.erase(id);
-  }
-}
-
-void Engine::addPlayer(int id) {
-  if (_otherPlayers.find(id) != _otherPlayers.end()) {
-    _otherPlayers.erase(id);
-  }
-  _otherPlayers[id] = Player(id);
-}
-
-void Engine::updatePlayer(MessagePlayerUpdate *msg) {
-  if (!msg || msg->id == _player.getId())
-    return;
-  std::unordered_map<int, Player>::iterator it = _otherPlayers.find(msg->id);
-  if (it == _otherPlayers.end() && msg->id != _player.getId())
-    addPlayer(msg->id);
-  _otherPlayers[msg->id].setPos(msg->pos);
-  _otherPlayers[msg->id].setVel(msg->vel);
-  _otherPlayers[msg->id].setAngle(msg->angle);
+void Engine::_fillAtlas(void) {
+  _atlas->loadTexture("other", "../assets/other.png");
+  _atlas->loadTexture("player", "../assets/player.png");
+  _atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);
 }
 
 void Engine::_getEvent(void) {
@@ -143,6 +86,34 @@ void Engine::_getEvent(void) {
     else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
       _processInput(e.key.keysym.sym, (e.type == SDL_KEYDOWN));
   }
+}
+
+void Engine::_processInput(SDL_Keycode &sym, bool state) {
+  switch (sym) {
+  case SDLK_w:
+  case SDLK_UP:
+    _player.setInput(UP, state);
+    break;
+  case SDLK_s:
+  case SDLK_DOWN:
+    _player.setInput(DOWN, state);
+    break;
+  case SDLK_a:
+  case SDLK_LEFT:
+    _player.setInput(LEFT, state);
+    break;
+  case SDLK_d:
+  case SDLK_RIGHT:
+    _player.setInput(RIGHT, state);
+    break;
+  }
+}
+
+void Engine::_centerCameraOnPlayer(void) {
+  _camera.x = (_player.getPos().x + (float)_player.getSize() / 2) -
+              (float)SCR_WIDTH / 2.f;
+  _camera.y = (_player.getPos().y + (float)_player.getSize() / 2) -
+              (float)SCR_HEIGHT / 2.f;
 }
 
 void Engine::_render(void) {
@@ -165,40 +136,76 @@ void Engine::_render(void) {
   SDL_RenderPresent(_renderer);
 }
 
-void Engine::debug_tilesbox(void) {
-  int s = _player.getSize();
-  int hs = s / 2;
-  int px = _player.getPos().x;
-  int py = _player.getPos().y;
-  SDL_Rect tl = {px - hs - _camera.x, py - hs - _camera.y, s, s};
-  SDL_Rect tr = {px + hs - _camera.x, py - hs - _camera.y, s, s};
-  SDL_Rect bl = {px - hs - _camera.x, py + hs - _camera.y, s, s};
-  SDL_Rect br = {px + hs - _camera.x, py + hs - _camera.y, s, s};
-
-  SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
-  SDL_RenderDrawRect(_renderer, &tl);
-  SDL_RenderDrawRect(_renderer, &tr);
-  SDL_RenderDrawRect(_renderer, &bl);
-  SDL_RenderDrawRect(_renderer, &br);
+void Engine::_NotifyPlayerUpdate(void) {
+  Vector const &plrPos = _player.getPos();
+  Vector const &plrVel = _player.getVel();
+  float plrAngle = _player.getAngle();
+  _msgPlayerUpdate.id = _player.getId();
+  if (_msgPlayerUpdate.angle != plrAngle || _msgPlayerUpdate.pos != plrPos ||
+      _msgPlayerUpdate.vel != plrVel) {
+    _msgPlayerUpdate.angle = plrAngle;
+    _msgPlayerUpdate.pos = plrPos;
+    _msgPlayerUpdate.vel = plrVel;
+    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_UPDATE);
+    _client.sendMessage(pck);
+  }
 }
 
-void Engine::_processInput(SDL_Keycode &sym, bool state) {
-  switch (sym) {
-  case SDLK_w:
-  case SDLK_UP:
-    _player.setInput(UP, state);
-    break;
-  case SDLK_s:
-  case SDLK_DOWN:
-    _player.setInput(DOWN, state);
-    break;
-  case SDLK_a:
-  case SDLK_LEFT:
-    _player.setInput(LEFT, state);
-    break;
-  case SDLK_d:
-  case SDLK_RIGHT:
-    _player.setInput(RIGHT, state);
-    break;
+void Engine::_removePlayer(int id) {
+  if (_otherPlayers.find(id) != _otherPlayers.end()) {
+    _otherPlayers.erase(id);
+  }
+}
+
+void Engine::_addPlayer(int id) {
+  if (_otherPlayers.find(id) != _otherPlayers.end()) {
+    _otherPlayers.erase(id);
+  }
+  _otherPlayers[id] = Player(id);
+}
+
+void Engine::_updatePlayer(int id, Vector &pos, Vector &vel, float angle) {
+  if (id == _player.getId())
+    return;
+  std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
+  if (it == _otherPlayers.end())
+    _addPlayer(id);
+  _otherPlayers[id].setPos(pos);
+  _otherPlayers[id].setVel(vel);
+  _otherPlayers[id].setAngle(angle);
+}
+
+void Engine::receiveMsg(MessagePlayerCo *msg) { _addPlayer(msg->id); }
+
+void Engine::receiveMsg(MessagePlayerDisco *msg) { _removePlayer(msg->id); }
+
+void Engine::receiveMsg(MessagePlayerUpdate *msg) {
+  _updatePlayer(msg->id, msg->pos, msg->vel, msg->angle);
+}
+
+void Engine::receiveMsg(MessagePlayerID *msg) {
+  _player.setId(msg->id);
+  printf("[Player] Got assigned id: %d\n", msg->id);
+}
+
+void Engine::receiveMsg(MessageMobUpdate *msg) {
+  _hive.updateMob(msg->id, msg->type, msg->pos, msg->vel, msg->angle);
+}
+
+void Engine::receiveMsg(MessageGameState *msg) {
+  for (int i = 0; i < msg->nplayer && i < MAX_N_PLAYER; i++)
+    receiveMsg(&msg->players[i]);
+  for (int i = 0; i < msg->nmob && i < MAX_N_MOB; i++)
+    receiveMsg(&msg->mob[i]);
+}
+
+void Engine::receiveMsg(MessageMap *msg) {
+  _map->rcvMsg(*msg);
+  if (_map->countMissingMsg() == 0 && !_map->isLoaded()) {
+    if (_map->loadFromMsg()) {
+      _map->createTiles();
+      _state = RUNNING;
+      printf("[Map] Loaded successfully\n");
+    }
   }
 }

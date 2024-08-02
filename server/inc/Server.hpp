@@ -8,6 +8,7 @@
 
 #include "Map.hpp"
 #include "Message.hpp"
+#include "MobFactory.hpp"
 #include "User.hpp"
 
 struct t_msg {
@@ -48,6 +49,7 @@ private:
   Map _map;
   std::unordered_map<ENetPeer *, User> _users;
   std::vector<t_msg> _msgOut;
+  MobFactory _hive;
 };
 
 extern Server *g_serverInstance;

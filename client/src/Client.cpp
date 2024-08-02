@@ -91,14 +91,6 @@ void Client::getEvent(Engine &eng) {
   }
 }
 
-void Client::sendMessage(const std::string &message) {
-  if (_peer != nullptr) {
-    ENetPacket *packet = enet_packet_create(
-        message.c_str(), message.length() + 1, ENET_PACKET_FLAG_RELIABLE);
-    enet_peer_send(_peer, 0, packet);
-  }
-}
-
 void Client::sendMessage(ENetPacket *packet) {
   if (_peer != nullptr) {
     if (enet_peer_send(_peer, 0, packet) < 0)
@@ -106,46 +98,57 @@ void Client::sendMessage(ENetPacket *packet) {
   }
 }
 
-void Client::_handleReceive(ENetEvent &event, Engine &eng) {
+int Client::_handleReceive(ENetEvent &event, Engine &eng) {
+  if (event.packet->dataLength < sizeof(MessageHeader))
+    return -1;
   MessageHeader *msgHeader = (MessageHeader *)(event.packet->data);
+  size_t bodyLen = event.packet->dataLength - sizeof(MessageHeader);
   void *msgBody = (void *)(event.packet->data + sizeof(MessageHeader));
   switch (msgHeader->type) {
   case PLR_CO: {
-    MessagePlayerCo *msgCo = (MessagePlayerCo *)msgBody;
-    eng.addPlayer(msgCo->id);
+    if (bodyLen < sizeof(MessagePlayerCo))
+      return -1;
+    eng.receiveMsg(static_cast<MessagePlayerCo *>(msgBody));
     break;
   }
   case PLR_DISCO: {
-    MessagePlayerDisco *msgDisco = (MessagePlayerDisco *)msgBody;
-    eng.removePlayer(msgDisco->id);
+    if (bodyLen < sizeof(MessagePlayerDisco))
+      return -1;
+    eng.receiveMsg(static_cast<MessagePlayerDisco *>(msgBody));
     break;
   }
   case PLR_UPDATE: {
-    MessagePlayerUpdate *msgUpdate = (MessagePlayerUpdate *)msgBody;
-    eng.updatePlayer(msgUpdate);
+    if (bodyLen < sizeof(MessagePlayerUpdate))
+      return -1;
+    eng.receiveMsg(static_cast<MessagePlayerUpdate *>(msgBody));
     break;
   }
   case PLR_ID: {
-    MessagePlayerID *msgID = (MessagePlayerID *)msgBody;
-    eng.setPlayerId(msgID->id);
-    printf("received ID: %d\n", msgID->id);
+    if (bodyLen < sizeof(MessagePlayerID))
+      return -1;
+    eng.receiveMsg(static_cast<MessagePlayerID *>(msgBody));
+    break;
+  }
+  case MOB_UPDATE: {
+    if (bodyLen < sizeof(MessageMobUpdate))
+      return -1;
+    eng.receiveMsg(static_cast<MessageMobUpdate *>(msgBody));
     break;
   }
   case GAME_STATE: {
-    MessageGameState *msgSate = (MessageGameState *)msgBody;
-    for (int i = 0; i < msgSate->nplayer; i++) {
-      MessagePlayerUpdate *plr = &msgSate->players[i];
-      eng.updatePlayer(plr);
-    }
+    if (bodyLen < sizeof(MessageGameState))
+      return -1;
+    eng.receiveMsg(static_cast<MessageGameState *>(msgBody));
     break;
   }
   case MAP: {
-    MessageMap msgMap =
-        deserializeMessage<MessageMap>((const char *)event.packet->data);
-    eng.receivedMap(msgMap);
+    if (bodyLen < sizeof(MessageMap))
+      return -1;
+    eng.receiveMsg(static_cast<MessageMap *>(msgBody));
     break;
   }
   default:
-    break;
+    return -1;
   }
+  return 0;
 }

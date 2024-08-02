@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <enet/enet.h>
 #include <iostream>
+#include <iterator>
 #include <ratio>
 #include <stdexcept>
 #include <thread>
@@ -242,7 +243,7 @@ MessageGameState Server::_craftMsgGameState(void) {
   int i = 0;
   for (const auto &u : _users) {
     if (i >= MAX_N_PLAYER) {
-      std::cout << msg.nplayer << ": too much players !";
+      std::cout << msg.nplayer << ": too much players !" << std::endl;
       break;
     }
     msg.players[i].angle = u.second.player.getAngle();
@@ -251,5 +252,6 @@ MessageGameState Server::_craftMsgGameState(void) {
     msg.players[i].id = u.second.getId();
     i++;
   }
+  _hive.craftMobMsgState(msg);
   return msg;
 }
