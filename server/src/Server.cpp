@@ -4,12 +4,12 @@
 #include <cstdio>
 #include <enet/enet.h>
 #include <iostream>
-#include <iterator>
 #include <ratio>
 #include <stdexcept>
 #include <thread>
 
 #include "Message.hpp"
+#include "Player.hpp"
 #include "Server.hpp"
 
 Server *g_serverInstance = nullptr;
@@ -27,7 +27,6 @@ Server::Server() : _running(true), _server(nullptr) {
     throw std::runtime_error("An error occurred while initializing ENet.");
   }
   atexit(enet_deinitialize);
-  _loadMap("../assets/map");
 }
 
 Server::~Server() {
@@ -44,7 +43,6 @@ void Server::_loadMap(std::string const &path) {
 
 void Server::init() {
   _address.host = ENET_HOST_ANY;
-  /*_address.port = 1234; // Server will bind to this port*/
   _address.port = 45454;
   _server = enet_host_create(&_address, 32, 2, 0, 0);
   if (_server == nullptr) {
@@ -83,6 +81,13 @@ void Server::_disconnectAllClients() {
   }
 }
 
+int Server::loadGame(std::string const &mapFile) {
+  _loadMap(mapFile);
+  Vector pos(64, 128);
+  _hive.createMob(BASIC, pos);
+  return 0;
+}
+
 void Server::run() {
   int tickRate = 120;
   ENetEvent event;
@@ -95,6 +100,7 @@ void Server::run() {
     std::chrono::duration<double, std::milli> timeSinceLastTick =
         currentTime - lastTick;
 
+    _updateGameState();
     if (timeSinceLastTick >= tickDuration) {
       lastTick = currentTime;
       _sendGameSateToAll();
@@ -118,10 +124,19 @@ void Server::run() {
       }
       _msgOutClean();
     } else {
-      // Sleep for the remaining time of the tick duration
       auto sleepTime = tickDuration - timeSinceLastTick;
       std::this_thread::sleep_for(sleepTime);
     }
+  }
+}
+
+void Server::_updateGameState(void) {
+  std::vector<Player *> playerVec;
+  for (auto &u : _users)
+    playerVec.push_back(&u.second.player);
+  for (const auto &p : _hive.getMobs()) {
+    const auto &mob = p.second;
+    mob->findClosest(playerVec);
   }
 }
 

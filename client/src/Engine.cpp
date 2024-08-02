@@ -75,6 +75,7 @@ void Engine::run(void) {
 void Engine::_fillAtlas(void) {
   _atlas->loadTexture("other", "../assets/other.png");
   _atlas->loadTexture("player", "../assets/player.png");
+  _atlas->loadTexture("mob", "../assets/mob.png");
   _atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);
 }
 
@@ -123,6 +124,12 @@ void Engine::_render(void) {
   _map->render(_camera);
   /*_map->debug_render(_camera);*/
 
+  for (const auto &p : _hive.getMobs()) {
+    const auto &mob = p.second;
+    _atlas->drawTexture("mob", mob->getPos().x - mob->getSize() / 2 - _camera.x,
+                        mob->getPos().y - mob->getSize() / 2 - _camera.y,
+                        mob->getAngle());
+  }
   _atlas->drawTexture("player",
                       _player.getPos().x - _player.getSize() / 2 - _camera.x,
                       _player.getPos().y - _player.getSize() / 2 - _camera.y,

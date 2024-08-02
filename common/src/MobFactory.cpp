@@ -21,6 +21,7 @@ void MobFactory::createMob(mobType type, Vector &pos) {
     break;
   }
   if (mob) {
+    mob->setType(type);
     mob->setPos(pos);
     _mobs[mob->getId()] = mob;
   }
@@ -28,9 +29,12 @@ void MobFactory::createMob(mobType type, Vector &pos) {
 
 void MobFactory::updateMob(int id, mobType type, Vector &pos, Vector &vel,
                            float angle) {
-  auto it = _mobs.find(id);
-  if (it == _mobs.end()) {
+  if (_mobs.empty()) {
     createMob(type, pos);
+  } else {
+    auto it = _mobs.find(id);
+    if (it == _mobs.end())
+      createMob(type, pos);
   }
   std::shared_ptr mob = _mobs[id];
   mob->setPos(pos);
@@ -48,9 +52,15 @@ void MobFactory::craftMobMsgState(MessageGameState &msg) {
       break;
     }
     msg.mob[i].id = m.second->getId();
+    msg.mob[i].type = m.second->getType();
     msg.mob[i].angle = m.second->getAngle();
     msg.mob[i].vel = m.second->getVel();
     msg.mob[i].pos = m.second->getPos();
     i++;
   }
+}
+
+std::unordered_map<int, std::shared_ptr<Mob>> const &
+MobFactory::getMobs(void) const {
+  return _mobs;
 }

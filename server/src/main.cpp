@@ -1,6 +1,5 @@
 #include <csignal>
 #include <iostream>
-#include <stdexcept>
 
 #include "Server.hpp"
 
@@ -10,6 +9,7 @@ int main() {
     g_serverInstance = &server;
     std::signal(SIGINT, signalHandler);
     server.init();
+    server.loadGame("../assets/map");
     server.run();
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;

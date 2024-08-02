@@ -26,6 +26,8 @@ public:
   Vector const &getPos(void) const;
   Vector const &getVel(void) const;
   int getSize(void) const;
+  void setMaxSpeed(float maxSpeed);
+  float getMaxSpeed(void) const;
 
 protected:
   int _id;

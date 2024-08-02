@@ -27,8 +27,10 @@ public:
   void deinit();
   void run();
   void stop();
+  int loadGame(std::string const &mapFile);
 
 private:
+  void _updateGameState(void);
   void _msgOutProcess(void);
   void _msgOutClean(void);
   void _msgOutAdd(ENetPeer *perr, ENetPacket *packet, bool ccAll);

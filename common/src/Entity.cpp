@@ -61,3 +61,7 @@ void Entity::aimAngle(int targetX, int targetY) {
   float dy = targetY - _position.y;
   _angle = std::atan2(dy, dx) * (180.0f / M_PI);
 }
+
+void Entity::setMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
+
+float Entity::getMaxSpeed(void) const { return _maxSpeed; }

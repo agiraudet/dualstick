@@ -51,6 +51,14 @@ Vector &Vector::operator=(Vector const &other) {
   return *this;
 }
 
+float Vector::distance(Vector const &other) const {
+  return std::sqrt(distanceSq(other));
+}
+
+float Vector::distanceSq(Vector const &other) const {
+  return (other.x - x) * (other.x - x) + (other.y - y) * (other.y - y);
+}
+
 // Comparison operators
 bool Vector::operator>(Vector const &other) const {
   return magnitude() > other.magnitude();

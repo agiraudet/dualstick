@@ -16,6 +16,7 @@ public:
   void updateMob(int id, mobType type, Vector &pos, Vector &vel, float angle);
   void craftMobMsgState(MessageGameState &msg);
   int size(void) const;
+  std::unordered_map<int, std::shared_ptr<Mob>> const &getMobs(void) const;
 
 private:
   std::unordered_map<int, std::shared_ptr<Mob>> _mobs;

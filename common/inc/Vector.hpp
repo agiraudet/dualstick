@@ -22,6 +22,8 @@ struct Vector {
   float getY(void) const;
   float intensity(void) const;
   float magnitude(void) const;
+  float distance(Vector const &other) const;
+  float distanceSq(Vector const &other) const;
 
   Vector &operator=(Vector const &other);
   bool operator>(Vector const &other) const;
