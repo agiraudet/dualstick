@@ -17,6 +17,7 @@ public:
   void createTiles(void);
   void render(SDL_Rect &camera);
 
+  void debug_frame(SDL_Rect &camera, int x, int y);
   /*public:*/
   /*  void debug_render(SDL_Rect &camera);*/
 

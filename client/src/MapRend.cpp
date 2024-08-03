@@ -1,4 +1,5 @@
 #include "MapRend.hpp"
+#include "Map.hpp"
 #include <SDL2/SDL_rect.h>
 #include <cstdio>
 
@@ -32,6 +33,12 @@ void MapRend::render(SDL_Rect &camera) {
       }
     }
   }
+}
+
+void MapRend::debug_frame(SDL_Rect &camera, int x, int y) {
+  auto const &tile = _tileData[y][x];
+  _atlas->drawTextureF(_tileSet, 2, tile.rect.x - camera.x,
+                       tile.rect.y - camera.y);
 }
 
 /*void MapRend::debug_render(SDL_Rect &camera) {*/

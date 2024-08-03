@@ -12,7 +12,8 @@ public:
   Mob(void);
   void setType(mobType type);
   mobType getType(void) const;
-  void findClosest(std::vector<Player *> &playerVec);
+  Player *findClosest(std::vector<Player *> &playerVec);
+  bool futurMovAllowed(Map &map, Vector const &vel);
 
 private:
   mobType _type;

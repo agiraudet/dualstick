@@ -8,9 +8,11 @@
 #include <stdexcept>
 #include <thread>
 
+#include "Entity.hpp"
 #include "Message.hpp"
 #include "Player.hpp"
 #include "Server.hpp"
+#include "Vector.hpp"
 
 Server *g_serverInstance = nullptr;
 
@@ -95,13 +97,31 @@ void Server::run() {
   auto tickDuration =
       std::chrono::milliseconds(1000 / tickRate); // Duration of each tick
 
+  // TMP
+  int tickCount = 0;
+
   while (true && _running) {
     auto currentTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> timeSinceLastTick =
         currentTime - lastTick;
 
+    // TMP
+    tickCount++;
+    if (tickCount >= tickRate) {
+      auto it = _users.begin();
+      if (it != _users.end()) {
+        _map._resetFlow();
+        Vector const &pos = it->second.player.getPos();
+        _map._updateFlow(0, pos.x / _map.getTileSize(),
+                         pos.y / _map.getTileSize());
+      }
+      _map._printFlow();
+      tickCount = 0;
+    }
+
     _updateGameState();
-    if (timeSinceLastTick >= tickDuration) {
+    // TMP remove the x  / 10 once line of sight is added
+    if (timeSinceLastTick >= tickDuration / 10) {
       lastTick = currentTime;
       _sendGameSateToAll();
       _msgOutProcess();
@@ -137,6 +157,23 @@ void Server::_updateGameState(void) {
   for (const auto &p : _hive.getMobs()) {
     const auto &mob = p.second;
     mob->findClosest(playerVec);
+    Vector const &pos = mob->getPos();
+    Vector dir = _map._getDirFlow(
+                     (pos.x /*- mob->getSize() / 2*/) / _map.getTileSize(),
+                     (pos.y /*- mob->getSize() / 2*/) / _map.getTileSize()) *
+                 ENTITY_MAXSPEED;
+    /*if (mob->futurMovAllowed(_map, dir)) {*/
+    /*  mob->setVel(dir);*/
+    /*  mob->capSpeed();*/
+    /*} else {*/
+    /*  Vector test(dir.x, dir.y);*/
+    /*  test = test * -1;*/
+    /*  mob->setVel(test);*/
+    /*}*/
+    mob->setVel(dir);
+    mob->capSpeed();
+    /*mob->move(_map);*/
+    mob->move();
   }
 }
 

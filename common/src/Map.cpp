@@ -1,8 +1,10 @@
 #include "Map.hpp"
 #include "Message.hpp"
 #include <algorithm>
+#include <climits>
 #include <cstdio>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <stdexcept>
 
@@ -31,6 +33,7 @@ bool Map::loadFromFile(const std::string &filename) {
     _height++;
   }
   file.close();
+  _initFlow();
   _loaded = true;
   return true;
 }
@@ -72,6 +75,7 @@ bool Map::loadFromMsg(void) {
     _mapData.push_back(row);
     _height++;
   }
+  _initFlow();
   _loaded = true;
   return true;
 }
@@ -163,4 +167,77 @@ bool Map::_checkCollision(int tileIndex) const {
   else if (tileIndex >= 56)
     return false;
   return true;
+}
+
+void Map::_initFlow(void) {
+  _flowData.resize(_mapData.size());
+  for (size_t i = 0; i < _mapData.size(); ++i) {
+    _flowData[i].resize(_mapData[i].size(), INT_MAX);
+  }
+}
+
+void Map::_resetFlow(void) {
+  for (auto &row : _flowData) {
+    std::fill(row.begin(), row.end(), INT_MAX);
+  }
+}
+
+void Map::_updateFlow(int value, int x, int y) {
+  if (value >= _flowData[y][x] || x < 0 || x >= _width || y < 0 || y >= _height)
+    return;
+  if (_checkCollision(getTile(x, y)))
+    return;
+  _flowData[y][x] = value;
+  _updateFlow(value + 2, x - 1, y - 1);
+  _updateFlow(value + 1, x, y - 1);
+  _updateFlow(value + 2, x + 1, y - 1);
+  _updateFlow(value + 1, x - 1, y);
+  _updateFlow(value + 1, x + 1, y);
+  _updateFlow(value + 2, x - 1, y + 1);
+  _updateFlow(value + 1, x, y + 1);
+  _updateFlow(value + 2, x + 1, y + 1);
+}
+
+int Map::_getValueFlow(int x, int y) { return _flowData[y][x]; }
+
+Vector Map::_getDirFlow(int x, int y) {
+  std::vector<Vector> directions = {
+      Vector(0, -1), // N
+      Vector(1, -1), // NE
+      Vector(1, 0),  // E
+      Vector(1, 1),  // SE
+      Vector(0, 1),  // S
+      Vector(-1, 1), // SW
+      Vector(-1, 0), // W
+      Vector(-1, -1) // NW
+  };
+  int minValue = _flowData[y][x];
+  printf("%d\n", minValue);
+  /*int minValue = 99999;*/
+  Vector direction(0, 0);
+  for (const auto &dir : directions) {
+    int newX = x + dir.x;
+    int newY = y + dir.y;
+    if (newX >= 0 && newX < _width && newY >= 0 && newY < _height) {
+      if (_flowData[newY][newX] < minValue) {
+        minValue = _flowData[newY][newX];
+        direction = dir;
+      }
+    }
+  }
+  return direction;
+}
+
+void Map::_printFlow(void) {
+  for (const auto &row : _flowData) {
+    for (const auto &elem : row) {
+      if (elem > 999)
+        std::cout << "   ";
+      else if (elem > 99)
+        std::cout << "xx ";
+      else
+        std::cout << std::setw(2) << elem << " ";
+    }
+    std::cout << std::endl;
+  }
 }

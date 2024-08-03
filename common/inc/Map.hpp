@@ -30,7 +30,16 @@ protected:
   std::vector<int> _parseLine(const std::string &line) const;
   bool _checkCollision(int tileIndex) const;
 
+public:
+  void _updateFlow(int value, int x, int y);
+  void _resetFlow(void);
+  void _initFlow(void);
+  int _getValueFlow(int x, int y);
+  void _printFlow(void);
+  Vector _getDirFlow(int x, int y);
+
 protected:
+  std::vector<std::vector<int>> _flowData;
   std::vector<std::vector<int>> _mapData;
   std::vector<MessageMap> _msgMap;
   int _width;

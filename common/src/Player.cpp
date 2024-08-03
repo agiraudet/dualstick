@@ -29,7 +29,7 @@ void Player::applyInput(void) {
     _velocity += Vector(-speed, 0);
   if (_inputs[RIGHT])
     _velocity += Vector(speed, 0);
-  _velocity.capIntensity(_maxSpeed * _maxSpeed);
+  capSpeed();
 }
 #else
 void Player::applyInput(void) {

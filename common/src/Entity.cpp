@@ -27,15 +27,42 @@ void Entity::move(void) {
   _lastMove = currentTime;
 }
 
+/*void Entity::move(Map &map) {*/
+/*  auto currentTime = std::chrono::high_resolution_clock::now();*/
+/*  std::chrono::duration<double, std::milli> timeSinceMove =*/
+/*      currentTime - _lastMove;*/
+/*  double deltaTime = timeSinceMove.count() / 1000.0;*/
+/*  Vector futurPos = _position + _velocity * deltaTime;*/
+/*  if (!map.boxIsColliding(futurPos.x - (float)_size / 2.f,*/
+/*                          futurPos.y - (float)_size / 2.f, _size, _size)) {*/
+/*    _position = futurPos;*/
+/*  }*/
+/*  _lastMove = currentTime;*/
+/*}*/
+
 void Entity::move(Map &map) {
   auto currentTime = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> timeSinceMove =
       currentTime - _lastMove;
   double deltaTime = timeSinceMove.count() / 1000.0;
-  Vector futurPos = _position + _velocity * deltaTime;
-  if (!map.boxIsColliding(futurPos.x - (float)_size / 2.f,
-                          futurPos.y - (float)_size / 2.f, _size, _size)) {
-    _position = futurPos;
+  Vector intendedPos = _position + _velocity * deltaTime;
+  if (!map.boxIsColliding(intendedPos.x - (float)_size / 2.f,
+                          intendedPos.y - (float)_size / 2.f, _size, _size)) {
+    _position = intendedPos;
+  } else {
+    Vector slidePos = _position;
+    slidePos.x = intendedPos.x;
+    if (!map.boxIsColliding(slidePos.x - (float)_size / 2.f,
+                            slidePos.y - (float)_size / 2.f, _size, _size)) {
+      _position = slidePos;
+    } else {
+      slidePos = _position;
+      slidePos.y = intendedPos.y;
+      if (!map.boxIsColliding(slidePos.x - (float)_size / 2.f,
+                              slidePos.y - (float)_size / 2.f, _size, _size)) {
+        _position = slidePos;
+      }
+    }
   }
   _lastMove = currentTime;
 }
@@ -65,3 +92,5 @@ void Entity::aimAngle(int targetX, int targetY) {
 void Entity::setMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
 
 float Entity::getMaxSpeed(void) const { return _maxSpeed; }
+
+void Entity::capSpeed(void) { _velocity.capIntensity(_maxSpeed * _maxSpeed); }

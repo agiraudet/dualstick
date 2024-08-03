@@ -129,11 +129,19 @@ void Engine::_render(void) {
     _atlas->drawTexture("mob", mob->getPos().x - mob->getSize() / 2 - _camera.x,
                         mob->getPos().y - mob->getSize() / 2 - _camera.y,
                         mob->getAngle());
+    _map->debug_frame(_camera, mob->getPos().x / _map->getTileSize(),
+                      mob->getPos().y / _map->getTileSize());
+    /*_map->debug_frame(*/
+    /*    _camera, (mob->getPos().x - mob->getSize() / 2) /
+     * _map->getTileSize(),*/
+    /*    (mob->getPos().y - mob->getSize() / 2) / _map->getTileSize());*/
   }
   _atlas->drawTexture("player",
                       _player.getPos().x - _player.getSize() / 2 - _camera.x,
                       _player.getPos().y - _player.getSize() / 2 - _camera.y,
                       _player.getAngle());
+  _map->debug_frame(_camera, _player.getPos().x / _map->getTileSize(),
+                    _player.getPos().y / _map->getTileSize());
   for (const auto &p : _otherPlayers) {
     _atlas->drawTexture(
         "other", p.second.getPos().x - p.second.getSize() / 2 - _camera.x,

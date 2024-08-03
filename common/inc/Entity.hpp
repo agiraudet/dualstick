@@ -28,6 +28,7 @@ public:
   int getSize(void) const;
   void setMaxSpeed(float maxSpeed);
   float getMaxSpeed(void) const;
+  void capSpeed(void);
 
 protected:
   int _id;
