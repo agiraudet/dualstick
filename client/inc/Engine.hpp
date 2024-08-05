@@ -15,8 +15,8 @@
 #include "MobFactory.hpp"
 #include "Player.hpp"
 
-#define SCR_WIDTH 640
-#define SCR_HEIGHT 480
+#define SCR_WIDTH 640 * 2
+#define SCR_HEIGHT 480 * 2
 
 enum engState { STOPPED, RUNNING, LOADING };
 

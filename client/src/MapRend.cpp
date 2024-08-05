@@ -1,5 +1,4 @@
 #include "MapRend.hpp"
-#include "Map.hpp"
 #include <SDL2/SDL_rect.h>
 #include <cstdio>
 

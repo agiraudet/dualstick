@@ -85,7 +85,7 @@ void Server::_disconnectAllClients() {
 
 int Server::loadGame(std::string const &mapFile) {
   _loadMap(mapFile);
-  Vector pos(64, 128);
+  Vector pos(64 + 16, 128 + 16);
   _hive.createMob(BASIC, pos);
   return 0;
 }
@@ -108,14 +108,13 @@ void Server::run() {
     // TMP
     tickCount++;
     if (tickCount >= tickRate) {
-      auto it = _users.begin();
-      if (it != _users.end()) {
-        _map._resetFlow();
-        Vector const &pos = it->second.player.getPos();
+      _map._resetFlow();
+      for (auto const &u : _users) {
+        Vector const &pos = u.second.player.getPos();
         _map._updateFlow(0, pos.x / _map.getTileSize(),
                          pos.y / _map.getTileSize());
       }
-      _map._printFlow();
+      /*_map._printFlow();*/
       tickCount = 0;
     }
 
@@ -158,21 +157,16 @@ void Server::_updateGameState(void) {
     const auto &mob = p.second;
     mob->findClosest(playerVec);
     Vector const &pos = mob->getPos();
-    Vector dir = _map._getDirFlow(
-                     (pos.x /*- mob->getSize() / 2*/) / _map.getTileSize(),
-                     (pos.y /*- mob->getSize() / 2*/) / _map.getTileSize()) *
-                 ENTITY_MAXSPEED;
-    /*if (mob->futurMovAllowed(_map, dir)) {*/
-    /*  mob->setVel(dir);*/
-    /*  mob->capSpeed();*/
-    /*} else {*/
-    /*  Vector test(dir.x, dir.y);*/
-    /*  test = test * -1;*/
-    /*  mob->setVel(test);*/
-    /*}*/
+    Vector aim = _map._getDirFlow(mob->getTileX(), mob->getTileY());
+    aim.x =
+        (mob->getTileX() + aim.x) * _map.getTileSize() + _map.getTileSize() / 2;
+    aim.y =
+        (mob->getTileY() + aim.y) * _map.getTileSize() + _map.getTileSize() / 2;
+    Vector dir = aim - pos;
+    dir = dir.normalize();
+    dir = dir * ENTITY_MAXSPEED;
     mob->setVel(dir);
     mob->capSpeed();
-    /*mob->move(_map);*/
     mob->move();
   }
 }

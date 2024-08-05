@@ -203,17 +203,11 @@ int Map::_getValueFlow(int x, int y) { return _flowData[y][x]; }
 Vector Map::_getDirFlow(int x, int y) {
   std::vector<Vector> directions = {
       Vector(0, -1), // N
-      Vector(1, -1), // NE
       Vector(1, 0),  // E
-      Vector(1, 1),  // SE
       Vector(0, 1),  // S
-      Vector(-1, 1), // SW
       Vector(-1, 0), // W
-      Vector(-1, -1) // NW
   };
   int minValue = _flowData[y][x];
-  printf("%d\n", minValue);
-  /*int minValue = 99999;*/
   Vector direction(0, 0);
   for (const auto &dir : directions) {
     int newX = x + dir.x;

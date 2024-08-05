@@ -27,19 +27,6 @@ void Entity::move(void) {
   _lastMove = currentTime;
 }
 
-/*void Entity::move(Map &map) {*/
-/*  auto currentTime = std::chrono::high_resolution_clock::now();*/
-/*  std::chrono::duration<double, std::milli> timeSinceMove =*/
-/*      currentTime - _lastMove;*/
-/*  double deltaTime = timeSinceMove.count() / 1000.0;*/
-/*  Vector futurPos = _position + _velocity * deltaTime;*/
-/*  if (!map.boxIsColliding(futurPos.x - (float)_size / 2.f,*/
-/*                          futurPos.y - (float)_size / 2.f, _size, _size)) {*/
-/*    _position = futurPos;*/
-/*  }*/
-/*  _lastMove = currentTime;*/
-/*}*/
-
 void Entity::move(Map &map) {
   auto currentTime = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> timeSinceMove =

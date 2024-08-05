@@ -19,9 +19,9 @@ void Vector::setXY(float const x, float const y) {
 }
 
 void Vector::capIntensity(float const maxIntensity) {
-  float inten = intensity();
+  double inten = intensity();
   if (inten > maxIntensity) {
-    float factor = maxIntensity / inten;
+    double factor = maxIntensity / inten;
     x *= factor;
     y *= factor;
   }
@@ -29,7 +29,7 @@ void Vector::capIntensity(float const maxIntensity) {
 
 Vector Vector::normalize(void) const {
   float mag = magnitude();
-  if (mag == 0) {
+  if (mag <= 0) {
     return Vector(0, 0);
   }
   return Vector(x / mag, y / mag);

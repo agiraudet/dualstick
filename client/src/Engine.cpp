@@ -10,6 +10,7 @@
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_rect.h>
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <cstdio>
@@ -129,13 +130,17 @@ void Engine::_render(void) {
     _atlas->drawTexture("mob", mob->getPos().x - mob->getSize() / 2 - _camera.x,
                         mob->getPos().y - mob->getSize() / 2 - _camera.y,
                         mob->getAngle());
-    _map->debug_frame(_camera, mob->getPos().x / _map->getTileSize(),
-                      mob->getPos().y / _map->getTileSize());
+    _map->debug_frame(_camera, mob->getTileX(), mob->getTileY());
     /*_map->debug_frame(*/
     /*    _camera, (mob->getPos().x - mob->getSize() / 2) /
      * _map->getTileSize(),*/
     /*    (mob->getPos().y - mob->getSize() / 2) / _map->getTileSize());*/
+    SDL_SetRenderDrawColor(_renderer, 0xFF, 0x00, 0xFF, 0xFF);
+    SDL_Rect point = {(int)mob->getPos().x - 1 - _camera.x,
+                      (int)mob->getPos().y - 1 - _camera.y, 2, 2};
+    SDL_RenderFillRect(_renderer, &point);
   }
+
   _atlas->drawTexture("player",
                       _player.getPos().x - _player.getSize() / 2 - _camera.x,
                       _player.getPos().y - _player.getSize() / 2 - _camera.y,
