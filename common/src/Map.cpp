@@ -1,7 +1,9 @@
 #include "Map.hpp"
+#include "Entity.hpp"
 #include "Message.hpp"
 #include <algorithm>
 #include <climits>
+#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -168,6 +170,26 @@ bool Map::_checkCollision(int tileIndex) const {
     return false;
   return true;
 }
+
+/*bool rayHit(Vector const &ray, Entity const &entity) {*/
+/*  double dx = ray.x - entity.getPos().x - entity.getSize() / 2;*/
+/*  double dy = ray.y - entity.getPos().y - entity.getSize() / 2;*/
+/*  return dx * dx + dy * dy * dy <= entity.getSize() * entity.getSize();*/
+/*}*/
+/**/
+/*bool rayCast(Entity const &shooter, std::vector<Entity> const &shooty) {*/
+/*  const double rayInc = 1;*/
+/*  const double maxDist = 2000;*/
+/*  const double angle = shooter.getAngle();*/
+/*  Vector ray;*/
+/*  for (double t = 0; t < maxDist; t += rayInc) {*/
+/*    ray.x = shooter.getPos().x + t * cos(angle);*/
+/*    ray.y = shooter.getPos().y + t * sin(angle);*/
+/*    // check if point hit wall or is in ennemy rect*/
+/*  }*/
+/*}*/
+
+/// FLOW MAP
 
 void Map::_initFlow(void) {
   _flowData.resize(_mapData.size());

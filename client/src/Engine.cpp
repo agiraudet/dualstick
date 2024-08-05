@@ -119,7 +119,7 @@ void Engine::_centerCameraOnPlayer(void) {
 }
 
 void Engine::_render(void) {
-  SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
+  SDL_SetRenderDrawColor(_renderer, 63, 56, 81, 255);
   SDL_RenderClear(_renderer);
 
   _map->render(_camera);
@@ -130,23 +130,23 @@ void Engine::_render(void) {
     _atlas->drawTexture("mob", mob->getPos().x - mob->getSize() / 2 - _camera.x,
                         mob->getPos().y - mob->getSize() / 2 - _camera.y,
                         mob->getAngle());
-    _map->debug_frame(_camera, mob->getTileX(), mob->getTileY());
+    /*_map->debug_frame(_camera, mob->getTileX(), mob->getTileY());*/
     /*_map->debug_frame(*/
     /*    _camera, (mob->getPos().x - mob->getSize() / 2) /
      * _map->getTileSize(),*/
     /*    (mob->getPos().y - mob->getSize() / 2) / _map->getTileSize());*/
-    SDL_SetRenderDrawColor(_renderer, 0xFF, 0x00, 0xFF, 0xFF);
-    SDL_Rect point = {(int)mob->getPos().x - 1 - _camera.x,
-                      (int)mob->getPos().y - 1 - _camera.y, 2, 2};
-    SDL_RenderFillRect(_renderer, &point);
+    /*SDL_SetRenderDrawColor(_renderer, 0xFF, 0x00, 0xFF, 0xFF);*/
+    /*SDL_Rect point = {(int)mob->getPos().x - 1 - _camera.x,*/
+    /*                  (int)mob->getPos().y - 1 - _camera.y, 2, 2};*/
+    /*SDL_RenderFillRect(_renderer, &point);*/
   }
 
   _atlas->drawTexture("player",
                       _player.getPos().x - _player.getSize() / 2 - _camera.x,
                       _player.getPos().y - _player.getSize() / 2 - _camera.y,
                       _player.getAngle());
-  _map->debug_frame(_camera, _player.getPos().x / _map->getTileSize(),
-                    _player.getPos().y / _map->getTileSize());
+  /*_map->debug_frame(_camera, _player.getPos().x / _map->getTileSize(),*/
+  /*                  _player.getPos().y / _map->getTileSize());*/
   for (const auto &p : _otherPlayers) {
     _atlas->drawTexture(
         "other", p.second.getPos().x - p.second.getSize() / 2 - _camera.x,
