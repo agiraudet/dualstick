@@ -33,6 +33,7 @@ Server::Server() : _running(true), _server(nullptr) {
 
 Server::~Server() {
   std::cout << "Destroying server" << std::endl;
+
   deinit();
 }
 
@@ -65,6 +66,10 @@ void Server::deinit() {
 void Server::stop() {
   _running = false;
   _disconnectAllClients();
+  for (auto &msg : _msgOut) {
+    enet_packet_destroy(msg.packet);
+    msg.packet = nullptr;
+  }
 }
 
 void Server::_disconnectAllClients() {
@@ -141,7 +146,6 @@ void Server::run() {
           break;
         }
       }
-      _msgOutClean();
     } else {
       auto sleepTime = tickDuration - timeSinceLastTick;
       std::this_thread::sleep_for(sleepTime);
@@ -173,34 +177,28 @@ void Server::_updateGameState(void) {
 
 void Server::_msgOutProcess(void) {
   for (auto &msg : _msgOut) {
-    if (msg.peer == nullptr)
-      _distributeToAll(msg.packet);
-    else if (msg.ccAll)
-      _distributeToOther(msg.peer, msg.packet);
-    else
-      _users[msg.peer].send(msg.packet);
-    msg.processed = true;
+    if (msg.dest == ALL)
+      enet_host_broadcast(_server, 0, msg.packet);
+    else if (msg.dest == EXCEPT) {
+      for (auto &u : _users) {
+        if (u.second.getPeer() != msg.peer)
+          enet_peer_send(u.second.getPeer(), 0, msg.packet);
+      }
+    } else if (msg.dest == SINGLE)
+      enet_peer_send(msg.peer, 0, msg.packet);
   }
+  _msgOut.clear();
+  enet_host_flush(_server);
 }
 
-void Server::_msgOutClean(void) {
-  auto should_remove = [](t_msg &msg) {
-    if (msg.processed) {
-      return true;
-    }
-    return false;
-  };
-  _msgOut.erase(std::remove_if(_msgOut.begin(), _msgOut.end(), should_remove),
-                _msgOut.end());
-}
-
-void Server::_msgOutAdd(ENetPeer *peer, ENetPacket *packet, bool ccAll) {
-  t_msg msg = {peer, packet, ccAll, false};
+void Server::_msgOutAdd(ENetPeer *peer, ENetPacket *packet, msgDest dest) {
+  t_msg msg = {peer, packet, dest};
   _msgOut.push_back(msg);
 }
 
 void Server::_sendGameSateToAll(void) {
-  _msgOutAdd(nullptr, packageMessage(_craftMsgGameState(), GAME_STATE), true);
+  _craftMsgGameState();
+  _msgOutAdd(0, packageMessage(_msgGameState, GAME_STATE), ALL);
 }
 
 void Server::_sendMap(ENetPeer *peer) {
@@ -208,7 +206,7 @@ void Server::_sendMap(ENetPeer *peer) {
   for (auto const &msg : msgMap) {
     ENetPacket *packet = packageMessage(msg, MAP);
     printf("Snd map packet %d/%d\n", msg.idPack + 1, msg.nPack);
-    _msgOutAdd(peer, packet, false);
+    _msgOutAdd(peer, packet, SINGLE);
   }
 }
 
@@ -223,13 +221,14 @@ void Server::_handleConnect(ENetEvent &event) {
             << ((event.peer->address.host >> 24) & 0xFF) << ":"
             << event.peer->address.port << std::endl;
 
-  MessagePlayerCo msgCo = {newUser.getId()};
-  ENetPacket *packetCo = packageMessage(msgCo, PLR_CO);
-  _msgOutAdd(event.peer, packetCo, true);
-
+  // Need to signify the ID to the nre player before broadcasting his existence
   MessagePlayerID msgId = {newUser.getId()};
   ENetPacket *packetId = packageMessage(msgId, PLR_ID);
-  _msgOutAdd(event.peer, packetId, false);
+  _msgOutAdd(event.peer, packetId, SINGLE);
+
+  MessagePlayerCo msgCo = {newUser.getId()};
+  ENetPacket *packetCo = packageMessage(msgCo, PLR_CO);
+  _msgOutAdd(event.peer, packetCo, ALL);
 
   _sendMap(event.peer);
   printf("New player got send id %d\n", newUser.getId());
@@ -268,7 +267,7 @@ void Server::_handleDisconnect(ENetEvent &event) {
 
   MessagePlayerDisco msg = {userId};
   ENetPacket *packet = packageMessage(msg, PLR_DISCO);
-  _msgOutAdd(nullptr, packet, true);
+  _msgOutAdd(nullptr, packet, ALL);
 }
 
 void Server::_distributeToOther(ENetPeer *author, ENetPacket *packet) {
@@ -283,21 +282,19 @@ void Server::_distributeToAll(ENetPacket *packet) {
     u.second.send(packet);
 }
 
-MessageGameState Server::_craftMsgGameState(void) {
-  MessageGameState msg;
-  msg.nplayer = _users.size();
+void Server::_craftMsgGameState(void) {
+  _msgGameState.nplayer = _users.size();
   int i = 0;
   for (const auto &u : _users) {
     if (i >= MAX_N_PLAYER) {
-      std::cout << msg.nplayer << ": too much players !" << std::endl;
+      std::cout << _msgGameState.nplayer << ": too much players !" << std::endl;
       break;
     }
-    msg.players[i].angle = u.second.player.getAngle();
-    msg.players[i].vel = u.second.player.getVel();
-    msg.players[i].pos = u.second.player.getPos();
-    msg.players[i].id = u.second.getId();
+    _msgGameState.players[i].angle = u.second.player.getAngle();
+    _msgGameState.players[i].vel = u.second.player.getVel();
+    _msgGameState.players[i].pos = u.second.player.getPos();
+    _msgGameState.players[i].id = u.second.getId();
     i++;
   }
-  _hive.craftMobMsgState(msg);
-  return msg;
+  _hive.craftMobMsgState(_msgGameState);
 }

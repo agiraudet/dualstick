@@ -11,11 +11,12 @@
 #include "MobFactory.hpp"
 #include "User.hpp"
 
+enum msgDest { SINGLE, ALL, EXCEPT };
+
 struct t_msg {
   ENetPeer *peer;
   ENetPacket *packet;
-  bool ccAll;
-  bool processed;
+  msgDest dest;
 };
 
 class Server {
@@ -32,8 +33,7 @@ public:
 private:
   void _updateGameState(void);
   void _msgOutProcess(void);
-  void _msgOutClean(void);
-  void _msgOutAdd(ENetPeer *perr, ENetPacket *packet, bool ccAll);
+  void _msgOutAdd(ENetPeer *peer, ENetPacket *packet, msgDest dest);
   void _loadMap(std::string const &path);
   void _disconnectAllClients(void);
   void _handleConnect(ENetEvent &event);
@@ -43,7 +43,7 @@ private:
   void _distributeToAll(ENetPacket *packet);
   void _sendGameSateToAll(void);
   void _sendMap(ENetPeer *peer);
-  MessageGameState _craftMsgGameState(void);
+  void _craftMsgGameState(void);
 
   bool _running;
   ENetAddress _address;
@@ -52,6 +52,7 @@ private:
   std::unordered_map<ENetPeer *, User> _users;
   std::vector<t_msg> _msgOut;
   MobFactory _hive;
+  MessageGameState _msgGameState;
 };
 
 extern Server *g_serverInstance;

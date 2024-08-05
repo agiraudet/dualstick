@@ -195,7 +195,10 @@ void Engine::_updatePlayer(int id, Vector &pos, Vector &vel, float angle) {
   _otherPlayers[id].setAngle(angle);
 }
 
-void Engine::receiveMsg(MessagePlayerCo *msg) { _addPlayer(msg->id); }
+void Engine::receiveMsg(MessagePlayerCo *msg) {
+  if (msg->id != _player.getId())
+    _addPlayer(msg->id);
+}
 
 void Engine::receiveMsg(MessagePlayerDisco *msg) { _removePlayer(msg->id); }
 

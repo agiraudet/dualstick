@@ -2,6 +2,8 @@
 #define MESSAGE_HPP
 
 #include <SDL2/SDL_rect.h>
+#include <algorithm>
+#include <array>
 #include <cstring>
 #include <enet/enet.h>
 
@@ -87,12 +89,13 @@ template <typename T> T deserializeMessage(const char *data) {
 
 template <typename T>
 ENetPacket *packageMessage(const T &message, MessageType type) {
-  size_t dataLen = sizeof(MessageHeader) + sizeof(T);
-  char *data = new char[dataLen];
-  serializeMessage(message, data, type);
+  constexpr size_t headerSize = sizeof(MessageHeader);
+  constexpr size_t messageSize = sizeof(T);
+  constexpr size_t dataLen = headerSize + messageSize;
+  std::array<char, dataLen> data{};
+  serializeMessage(message, data.data(), type);
   ENetPacket *packet =
-      enet_packet_create(data, dataLen, ENET_PACKET_FLAG_RELIABLE);
-  delete[] data;
+      enet_packet_create(data.data(), dataLen, ENET_PACKET_FLAG_RELIABLE);
   return packet;
 }
 
