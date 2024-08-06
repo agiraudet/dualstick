@@ -156,7 +156,7 @@ void Listener::_handleConnect(ENetEvent &event, Server &serv) {
   std::cout << "[Listener] New connection: ";
   printAddress(event.peer->address);
   MessagePlayerID msgId = {newPeerId};
-  ENetPacket *packetId = packageMessage(msgId, PLR_ID);
+  ENetPacket *packetId = packageMessage(msgId, PLR_ID, true);
   msgOutAdd(newPeerId, packetId, SINGLE);
   serv.playerAdd(newPeerId);
 }
@@ -172,7 +172,7 @@ void Listener::_handleDisconnect(ENetEvent &event, Server &serv) {
     _peers.erase(oldPeerId);
   }
   MessagePlayerDisco msgDisco = {oldPeerId};
-  ENetPacket *packetDisco = packageMessage(msgDisco, PLR_DISCO);
+  ENetPacket *packetDisco = packageMessage(msgDisco, PLR_DISCO, true);
   msgOutAdd(oldPeerId, packetDisco, ALL);
 }
 

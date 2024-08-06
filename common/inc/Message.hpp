@@ -67,6 +67,7 @@ struct MessageMobUpdate {
 };
 
 struct MessageGameState {
+  uint32_t stamp;
   int nplayer;
   MessagePlayerUpdate players[MAX_N_PLAYER];
   int nmob;
@@ -96,14 +97,14 @@ template <typename T> T deserializeMessage(const char *data) {
 }
 
 template <typename T>
-ENetPacket *packageMessage(const T &message, MessageType type) {
+ENetPacket *packageMessage(const T &message, MessageType type, bool reliable) {
   constexpr size_t headerSize = sizeof(MessageHeader);
   constexpr size_t messageSize = sizeof(T);
   constexpr size_t dataLen = headerSize + messageSize;
   std::array<char, dataLen> data{};
   serializeMessage(message, data.data(), type);
-  ENetPacket *packet =
-      enet_packet_create(data.data(), dataLen, ENET_PACKET_FLAG_RELIABLE);
+  ENetPacket *packet = enet_packet_create(
+      data.data(), dataLen, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
   return packet;
 }
 

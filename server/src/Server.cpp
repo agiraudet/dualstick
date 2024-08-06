@@ -1,5 +1,6 @@
 #include <bits/chrono.h>
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <enet/enet.h>
@@ -66,7 +67,7 @@ void Server::stop() {
 }
 
 void Server::_run() {
-  constexpr int tickRate = 120;
+  constexpr int tickRate = 60;
   constexpr auto tickDuration = std::chrono::milliseconds(1000 / tickRate);
   auto lastTick = std::chrono::high_resolution_clock::now();
 
@@ -76,10 +77,10 @@ void Server::_run() {
         currentTime - lastTick;
     _updateGameState();
     _listener.recv(*this);
+    _listener.send();
     if (timeSinceLastTick >= tickDuration) {
       lastTick = currentTime;
       _sendGameSateToAll();
-      _listener.send();
     } else {
       std::this_thread::sleep_for(tickDuration - timeSinceLastTick);
     }
@@ -107,13 +108,14 @@ void Server::_updateGameState(void) {
 
 void Server::_sendGameSateToAll(void) {
   _craftMsgGameState();
-  _listener.msgOutAdd(-1, packageMessage(_msgGameState, GAME_STATE), ALL);
+  _listener.msgOutAdd(-1, packageMessage(_msgGameState, GAME_STATE, false),
+                      ALL);
 }
 
 void Server::_sendMap(int id) {
   std::vector<MessageMap> const &msgMap = _map.getMsg();
   for (auto const &msg : msgMap) {
-    ENetPacket *packet = packageMessage(msg, MAP);
+    ENetPacket *packet = packageMessage(msg, MAP, true);
     printf("Snd map packet %d/%d\n", msg.idPack + 1, msg.nPack);
     _listener.msgOutAdd(id, packet, SINGLE);
   }
@@ -121,7 +123,9 @@ void Server::_sendMap(int id) {
 
 void Server::_craftMsgGameState(void) {
   _msgGameState.nplayer = _players.size();
+  static uint32_t stamp = 0;
   int i = 0;
+  _msgGameState.stamp = stamp++;
   for (const auto &u : _players) {
     if (i >= MAX_N_PLAYER) {
       std::cout << _msgGameState.nplayer << ": too much players !" << std::endl;

@@ -14,6 +14,7 @@
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <enet/enet.h>
@@ -116,7 +117,7 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
     _player.setInput(RIGHT, state);
     break;
   case SDLK_SPACE:
-    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT);
+    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
     std::cout << "pew" << std::endl;
     _client.sendMessage(pck);
   }
@@ -163,7 +164,7 @@ void Engine::_NotifyPlayerUpdate(void) {
     _msgPlayerUpdate.angle = plrAngle;
     _msgPlayerUpdate.pos = plrPos;
     _msgPlayerUpdate.vel = plrVel;
-    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_UPDATE);
+    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_UPDATE, true);
     _client.sendMessage(pck);
   }
 }
@@ -214,6 +215,10 @@ void Engine::receiveMsg(MessageMobUpdate *msg) {
 }
 
 void Engine::receiveMsg(MessageGameState *msg) {
+  static uint32_t lastStamp = 0;
+  if (msg->stamp <= lastStamp)
+    return;
+  lastStamp = msg->stamp;
   for (int i = 0; i < msg->nplayer && i < MAX_N_PLAYER; i++)
     receiveMsg(&msg->players[i]);
   for (int i = 0; i < msg->nmob && i < MAX_N_MOB; i++)

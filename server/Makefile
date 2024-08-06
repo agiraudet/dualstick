@@ -24,7 +24,7 @@ SRCS            := FlowMap.cpp \
 OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
 
 INC_FLAGS       := $(addprefix -I, $(INC_DIR))
-CXXFLAGS        := -MD -Wall -Wextra $(INC_FLAGS) -g
+CXXFLAGS        := -MD -Wall -Wextra $(INC_FLAGS) -O3
 CXX             := g++
 
 $(NAME): $(OBJS) $(CMN_OBJS)
