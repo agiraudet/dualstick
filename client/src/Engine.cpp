@@ -13,6 +13,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <enet/enet.h>
@@ -60,6 +61,12 @@ void Engine::run(void) {
     _client.getEvent(*this);
     _getEvent();
     if (_state == RUNNING) {
+      /*for (auto &p : _otherPlayers) {*/
+      /*  p.second.move();*/
+      /*}*/
+      /*for (auto &m : _hive.getMobs()) {*/
+      /*  m.second->move();*/
+      /*}*/
       _player.applyInput();
       _player.move(*_map);
       _centerCameraOnPlayer();
@@ -183,6 +190,7 @@ void Engine::_updatePlayer(int id, Vector &pos, Vector &vel, float angle) {
   _otherPlayers[id].setPos(pos);
   _otherPlayers[id].setVel(vel);
   _otherPlayers[id].setAngle(angle);
+  _otherPlayers[id].setLastUpdate(std::chrono::high_resolution_clock::now());
 }
 
 void Engine::receiveMsg(MessagePlayerCo *msg) {

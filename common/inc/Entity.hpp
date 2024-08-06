@@ -29,6 +29,8 @@ public:
   void setMaxSpeed(float maxSpeed);
   float getMaxSpeed(void) const;
   void capSpeed(void);
+  void
+  setLastUpdate(std::chrono::high_resolution_clock::time_point currentTime);
 
 protected:
   int _id;

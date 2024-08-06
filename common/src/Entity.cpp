@@ -18,6 +18,11 @@ Entity::~Entity(void) {}
 
 void Entity::setId(int id) { _id = id; }
 
+void Entity::setLastUpdate(
+    std::chrono::high_resolution_clock::time_point currentTime) {
+  _lastMove = currentTime;
+}
+
 void Entity::move(void) {
   auto currentTime = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> timeSinceMove =
