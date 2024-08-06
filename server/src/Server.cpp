@@ -24,7 +24,7 @@ void signalHandler(int signum) {
   }
 }
 
-Server::Server() : _running(false) {
+Server::Server() : _running(false), _flow(_map) {
   if (enet_initialize() != 0) {
     throw std::runtime_error("An error occurred while initializing ENet.");
   }
@@ -37,15 +37,6 @@ Server::~Server() {
     _listener.disconnect();
 }
 
-void Server::start() {
-  if (!_listener.connect())
-    exit(EXIT_FAILURE);
-  _running = true;
-  _run();
-}
-
-void Server::stop() { _running = false; }
-
 void Server::_loadMap(std::string const &path) {
   if (!_map.loadFromFile(path))
     throw std::runtime_error("Failed to load map");
@@ -55,9 +46,23 @@ void Server::_loadMap(std::string const &path) {
 
 int Server::loadGame(std::string const &mapFile) {
   _loadMap(mapFile);
+  _flow.init();
   Vector pos(64 + 16, 128 + 16);
   _hive.createMob(BASIC, pos);
   return 0;
+}
+
+void Server::start() {
+  if (!_listener.connect())
+    exit(EXIT_FAILURE);
+  _running = true;
+  _flow.startUpdating();
+  _run();
+}
+
+void Server::stop() {
+  _flow.stopUpdating();
+  _running = false;
 }
 
 void Server::_run() {
@@ -65,29 +70,13 @@ void Server::_run() {
   auto lastTick = std::chrono::high_resolution_clock::now();
   auto tickDuration =
       std::chrono::milliseconds(1000 / tickRate); // Duration of each tick
-  // TMP
-  int tickCount = 0;
-
   while (_running) {
     auto currentTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> timeSinceLastTick =
         currentTime - lastTick;
-    // TMP
-    tickCount++;
-    if (tickCount >= tickRate) {
-      _map._resetFlow();
-      for (auto const &p : _players) {
-        Vector const &pos = p.second.getPos();
-        _map._updateFlow(0, pos.x / _map.getTileSize(),
-                         pos.y / _map.getTileSize());
-      }
-      /*_map._printFlow();*/
-      tickCount = 0;
-    }
     _updateGameState();
     _listener.recv(*this);
-    // TMP remove the x  / 10 once line of sight is added
-    if (timeSinceLastTick >= tickDuration / 10) {
+    if (timeSinceLastTick >= tickDuration) {
       lastTick = currentTime;
       _sendGameSateToAll();
       _listener.send();
@@ -99,14 +88,11 @@ void Server::_run() {
 }
 
 void Server::_updateGameState(void) {
-  std::vector<Player *> playerVec;
-  for (auto &p : _players)
-    playerVec.push_back(&p.second);
   for (const auto &p : _hive.getMobs()) {
     const auto &mob = p.second;
-    mob->findClosest(playerVec);
+    mob->findClosest(_playersPtr);
     Vector const &pos = mob->getPos();
-    Vector aim = _map._getDirFlow(mob->getTileX(), mob->getTileY());
+    Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
     aim.x =
         (mob->getTileX() + aim.x) * _map.getTileSize() + _map.getTileSize() / 2;
     aim.y =
@@ -151,16 +137,26 @@ void Server::_craftMsgGameState(void) {
   _hive.craftMobMsgState(_msgGameState);
 }
 
+void Server::_refreshPlayerPtr(void) {
+  _playersPtr.clear();
+  for (auto &p : _players)
+    _playersPtr.push_back(&p.second);
+  _flow.updatePlayerVec(&_playersPtr);
+}
+
 void Server::playerAdd(int id) {
   _players[id] = Player();
   _players[id].setId(id);
   _sendMap(id);
+  _refreshPlayerPtr();
 }
 
 void Server::playerRemove(int id) {
   auto it = _players.find(id);
-  if (it != _players.end())
+  if (it != _players.end()) {
     _players.erase(it);
+    _refreshPlayerPtr();
+  }
 }
 
 void Server::playerUpdate(int id, Vector &pos, Vector &vel, float angle) {

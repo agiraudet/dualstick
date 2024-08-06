@@ -9,9 +9,9 @@ void Mob::setType(mobType type) { _type = type; }
 
 mobType Mob::getType(void) const { return _type; }
 
-Player *Mob::findClosest(std::vector<Player *> &playerVec) {
+Player const *Mob::findClosest(std::vector<Player const *> &playerVec) {
   double minDist = 0.f;
-  Player *closestPlayer = nullptr;
+  Player const *closestPlayer = nullptr;
 
   for (auto p : playerVec) {
     double dist = _position.distanceSq(p->getPos());

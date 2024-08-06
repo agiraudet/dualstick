@@ -1,13 +1,16 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include <enet/enet.h>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "FlowMap.hpp"
 #include "Listener.hpp"
 #include "Map.hpp"
 #include "Message.hpp"
 #include "MobFactory.hpp"
-#include <enet/enet.h>
-#include <string>
-#include <unordered_map>
 
 class Server {
 public:
@@ -31,12 +34,15 @@ private:
   void _sendGameSateToAll(void);
   void _sendMap(int id);
   void _craftMsgGameState(void);
+  void _refreshPlayerPtr(void);
 
 private:
   bool _running;
   Listener _listener;
   Map _map;
+  FlowMap _flow;
   std::unordered_map<int, Player> _players;
+  std::vector<Player const *> _playersPtr;
   MobFactory _hive;
   MessageGameState _msgGameState;
 };
