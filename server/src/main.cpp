@@ -8,9 +8,8 @@ int main() {
     Server server;
     g_serverInstance = &server;
     std::signal(SIGINT, signalHandler);
-    server.init();
     server.loadGame("../assets/map");
-    server.run();
+    server.start();
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;

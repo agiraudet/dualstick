@@ -17,8 +17,8 @@ CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))
 
 BUILD_DIR       := ./build
 SRCS_DIR        := ./src
-SRCS            := Server.cpp \
-                   User.cpp \
+SRCS            := Listener.cpp \
+									 Server.cpp \
                    main.cpp
 OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
 
