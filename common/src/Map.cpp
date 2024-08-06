@@ -1,5 +1,7 @@
 #include "Map.hpp"
 #include "Message.hpp"
+#include "Mob.hpp"
+#include "Player.hpp"
 #include <algorithm>
 #include <climits>
 #include <cmath>
@@ -138,6 +140,10 @@ int Map::getHeight() const { return _height; }
 
 int Map::getTileSize() const { return _tileSize; }
 
+bool Map::pointIsColliding(int x, int y) const {
+  return checkCollision(getTile(x / _tileSize, y / _tileSize));
+}
+
 bool Map::boxIsColliding(int x, int y, int w, int h) const {
   int tileTL = getTile(x / _tileSize, y / _tileSize);
   int tileTR = getTile((x + w) / _tileSize, y / _tileSize);
@@ -168,21 +174,24 @@ bool Map::checkCollision(int tileIndex) const {
     return false;
   return true;
 }
-
-/*bool rayHit(Vector const &ray, Entity const &entity) {*/
-/*  double dx = ray.x - entity.getPos().x - entity.getSize() / 2;*/
-/*  double dy = ray.y - entity.getPos().y - entity.getSize() / 2;*/
-/*  return dx * dx + dy * dy * dy <= entity.getSize() * entity.getSize();*/
-/*}*/
-/**/
-/*bool rayCast(Entity const &shooter, std::vector<Entity> const &shooty) {*/
-/*  const double rayInc = 1;*/
-/*  const double maxDist = 2000;*/
-/*  const double angle = shooter.getAngle();*/
-/*  Vector ray;*/
-/*  for (double t = 0; t < maxDist; t += rayInc) {*/
-/*    ray.x = shooter.getPos().x + t * cos(angle);*/
-/*    ray.y = shooter.getPos().y + t * sin(angle);*/
-/*    // check if point hit wall or is in ennemy rect*/
-/*  }*/
-/*}*/
+bool Map::rayCast(Player &shooter,
+                  std::unordered_map<int, std::shared_ptr<Mob>> &shooty) {
+  const double rayInc = 1;
+  const double maxDist = 2000;
+  const double angle = shooter.getAngle();
+  Vector ray;
+  for (double t = 0; t < maxDist; t += rayInc) {
+    ray.x = shooter.getPos().x + t * cos(angle);
+    ray.y = shooter.getPos().y + t * sin(angle);
+    for (auto &e : shooty) {
+      if (ray.distance(e.second->getPos()) <= e.second->getSize()) {
+        std::cout << "HIT MOB " << e.first << std::endl;
+        return true;
+      } else if (pointIsColliding(ray.x, ray.y)) {
+        std::cout << "hit wall" << std::endl;
+        return false;
+      }
+    }
+  }
+  return false;
+}

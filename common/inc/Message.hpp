@@ -21,6 +21,7 @@ enum MessageType {
   PLR_DISCO,
   PLR_UPDATE,
   PLR_ID,
+  PLR_SHOOT,
   MOB_UPDATE,
   GAME_STATE,
   MAP
@@ -48,6 +49,13 @@ struct MessagePlayerUpdate {
 
 struct MessagePlayerID {
   int id;
+};
+
+struct MessagePlayerShoot {
+  int id;
+  float angle;
+  Vector pos;
+  Vector vel;
 };
 
 struct MessageMobUpdate {

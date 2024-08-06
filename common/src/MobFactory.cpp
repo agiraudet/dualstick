@@ -60,7 +60,6 @@ void MobFactory::craftMobMsgState(MessageGameState &msg) {
   }
 }
 
-std::unordered_map<int, std::shared_ptr<Mob>> const &
-MobFactory::getMobs(void) const {
+std::unordered_map<int, std::shared_ptr<Mob>> &MobFactory::getMobs(void) {
   return _mobs;
 }

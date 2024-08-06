@@ -197,6 +197,19 @@ void Listener::_handleRecv(ENetEvent &event, Server &serv) {
                       msgUpdate->angle);
     break;
   }
+  case PLR_SHOOT: {
+    if (event.packet->dataLength !=
+        sizeof(MessageHeader) + sizeof(MessagePlayerUpdate)) {
+      std::cerr << "Received PLR_SHOOT packet with invalid length" << std::endl;
+      break;
+    }
+    MessagePlayerUpdate *msgUpdate =
+        (MessagePlayerUpdate *)(event.packet->data + sizeof(MessageHeader));
+    serv.playerUpdate(msgUpdate->id, msgUpdate->pos, msgUpdate->vel,
+                      msgUpdate->angle);
+    serv.playerShoot(msgUpdate->id);
+    break;
+  }
   default:
     break;
   }

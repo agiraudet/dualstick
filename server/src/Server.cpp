@@ -66,13 +66,13 @@ void Server::stop() {
 }
 
 void Server::_run() {
-  int tickRate = 120;
+  constexpr int tickRate = 120;
+  constexpr auto tickDuration = std::chrono::milliseconds(1000 / tickRate);
   auto lastTick = std::chrono::high_resolution_clock::now();
-  auto tickDuration =
-      std::chrono::milliseconds(1000 / tickRate); // Duration of each tick
+
   while (_running) {
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> timeSinceLastTick =
+    const auto currentTime = std::chrono::high_resolution_clock::now();
+    const std::chrono::duration<double, std::milli> timeSinceLastTick =
         currentTime - lastTick;
     _updateGameState();
     _listener.recv(*this);
@@ -81,8 +81,7 @@ void Server::_run() {
       _sendGameSateToAll();
       _listener.send();
     } else {
-      auto sleepTime = tickDuration - timeSinceLastTick;
-      std::this_thread::sleep_for(sleepTime);
+      std::this_thread::sleep_for(tickDuration - timeSinceLastTick);
     }
   }
 }
@@ -165,5 +164,12 @@ void Server::playerUpdate(int id, Vector &pos, Vector &vel, float angle) {
     it->second.setPos(pos);
     it->second.setVel(vel);
     it->second.setAngle(angle);
+  }
+}
+
+void Server::playerShoot(int id) {
+  auto it = _players.find(id);
+  if (it != _players.end()) {
+    _map.rayCast(it->second, _hive.getMobs());
   }
 }

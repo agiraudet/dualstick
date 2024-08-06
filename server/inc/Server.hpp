@@ -23,6 +23,7 @@ public:
   void playerAdd(int id);
   void playerRemove(int id);
   void playerUpdate(int id, Vector &pos, Vector &vel, float angle);
+  void playerShoot(int id);
 
 private:
   void _run();
