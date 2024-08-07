@@ -25,22 +25,20 @@
 Engine::Engine(void)
     : _client(Client()), _state(LOADING),
       _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99)}),
-      _window(nullptr), _renderer(nullptr), _atlas(nullptr),
+      _window(nullptr), _renderer(nullptr),
       _camera({0, 0, SCR_WIDTH, SCR_HEIGHT}) {
   SDL_Init(SDL_INIT_VIDEO);
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, SCR_WIDTH, SCR_HEIGHT,
                              SDL_WINDOW_SHOWN);
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
-  _atlas = new Atlas(_renderer);
   _fillAtlas();
-  _map = new MapRend(_atlas, "tiles");
+  _map = new MapRend();
   Vector initPos(64.f, 64.f);
   _player.setPos(initPos);
 }
 
 Engine::~Engine(void) {
-  delete _atlas;
   SDL_DestroyRenderer(_renderer);
   SDL_DestroyWindow(_window);
   SDL_Quit();
@@ -82,10 +80,21 @@ void Engine::run(void) {
 }
 
 void Engine::_fillAtlas(void) {
-  _atlas->loadTexture("other", "../assets/other.png");
-  _atlas->loadTexture("player", "../assets/player.png");
-  _atlas->loadTexture("mob", "../assets/mob.png");
-  _atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);
+  /*_atlas->loadTexture("other", "../assets/other.png");*/
+  /*_atlas->loadTexture("player", "../assets/player.png");*/
+  /*_atlas->loadTexture("mob", "../assets/mob.png");*/
+  /*_atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);*/
+  /*_atlas->loadTexture("anim", "../assets/anim.png", 16, 16);*/
+
+  /*_atlas.emplace("other", Tex(_renderer, "../assets/other.png"));*/
+  /*_atlas.emplace("player", Tex(_renderer, "../assets/player.png"));*/
+  /*_atlas.emplace("mob", Tex(_renderer, "../assets/mob.png"));*/
+  /*_atlas.emplace("tiles", Tex(_renderer, "../assets/tileset.png", 32));*/
+
+  _atlas["other"] = Tex(_renderer, "../assets/other.png");
+  _atlas["player"] = Tex(_renderer, "../assets/player.png");
+  _atlas["mob"] = Tex(_renderer, "../assets/mob.png");
+  _atlas["tiles"] = Tex(_renderer, "../assets/tileset.png", 32);
 }
 
 void Engine::_getEvent(void) {
@@ -137,20 +146,20 @@ void Engine::_render(void) {
   SDL_SetRenderDrawColor(_renderer, 63, 56, 81, 255);
   SDL_RenderClear(_renderer);
 
-  _map->render(_camera);
+  _map->render(_camera, _atlas["tiles"]);
   for (const auto &p : _hive.getMobs()) {
     const auto &mob = p.second;
-    _atlas->drawTexture("mob", mob->getPos().x - mob->getSize() / 2 - _camera.x,
-                        mob->getPos().y - mob->getSize() / 2 - _camera.y,
-                        mob->getAngle() * (180.0f / M_PI));
+    _atlas["mob"].drawRot(mob->getPos().x - mob->getSize() / 2 - _camera.x,
+                          mob->getPos().y - mob->getSize() / 2 - _camera.y,
+                          mob->getAngle() * (180.0f / M_PI));
   }
-  _atlas->drawTexture("player",
-                      _player.getPos().x - _player.getSize() / 2 - _camera.x,
-                      _player.getPos().y - _player.getSize() / 2 - _camera.y,
-                      _player.getAngle() * (180.0f / M_PI));
+  _atlas["player"].drawRot(
+      _player.getPos().x - _player.getSize() / 2 - _camera.x,
+      _player.getPos().y - _player.getSize() / 2 - _camera.y,
+      _player.getAngle() * (180.0f / M_PI));
   for (const auto &p : _otherPlayers) {
-    _atlas->drawTexture(
-        "other", p.second.getPos().x - p.second.getSize() / 2 - _camera.x,
+    _atlas["other"].drawRot(
+        p.second.getPos().x - p.second.getSize() / 2 - _camera.x,
         p.second.getPos().y - p.second.getSize() / 2 - _camera.y,
         p.second.getAngle() * (180.0f / M_PI));
   }

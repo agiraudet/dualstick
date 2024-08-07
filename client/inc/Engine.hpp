@@ -6,14 +6,15 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
+#include <string>
 #include <unordered_map>
 
-#include "Atlas.hpp"
 #include "Client.hpp"
 #include "MapRend.hpp"
 #include "Message.hpp"
 #include "MobFactory.hpp"
 #include "Player.hpp"
+#include "Tex.hpp"
 
 #define SCR_WIDTH 640
 #define SCR_HEIGHT 480
@@ -56,10 +57,10 @@ private:
   std::unordered_map<int, Player> _otherPlayers;
   SDL_Window *_window;
   SDL_Renderer *_renderer;
-  Atlas *_atlas;
   SDL_Rect _camera;
   MapRend *_map;
   MobFactory _hive;
+  std::unordered_map<std::string, Tex> _atlas;
 };
 
 #endif

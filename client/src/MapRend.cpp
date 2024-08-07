@@ -2,9 +2,7 @@
 #include <SDL2/SDL_rect.h>
 #include <cstdio>
 
-MapRend::MapRend(Atlas *atlas, const std::string &tileSet)
-    : _atlas(atlas), _tileSet(tileSet) {
-  const Texture &tileTexture = _atlas->getTexture(tileSet);
+MapRend::MapRend(void) {
   _pixelWidth = _tileSize * _width;
   _pixelHeight = _tileSize * _height;
 }
@@ -23,29 +21,12 @@ void MapRend::createTiles(void) {
   printf("loaded %ld tiles\n", _tileData.size() * _tileData[0].size());
 }
 
-void MapRend::render(SDL_Rect &camera) {
+void MapRend::render(SDL_Rect &camera, Tex &tex) {
   for (const auto &tileLine : _tileData) {
     for (const auto &tile : tileLine) {
       if (SDL_HasIntersection(&camera, &tile.rect) == SDL_TRUE) {
-        _atlas->drawTextureF(_tileSet, tile.frame, tile.rect.x - camera.x,
-                             tile.rect.y - camera.y);
+        tex.draw(tile.rect.x - camera.x, tile.rect.y - camera.y, tile.frame);
       }
     }
   }
 }
-
-void MapRend::debug_frame(SDL_Rect &camera, int x, int y) {
-  auto const &tile = _tileData[y][x];
-  _atlas->drawTextureF(_tileSet, 2, tile.rect.x - camera.x,
-                       tile.rect.y - camera.y);
-}
-
-/*void MapRend::debug_render(SDL_Rect &camera) {*/
-/*  for (auto coord : _debugCoord) {*/
-/*    Tile &tile = _tileData[coord.first][coord.second];*/
-/*    if (SDL_HasIntersection(&camera, &tile.rect) == SDL_TRUE) {*/
-/*      _atlas->drawTextureF(_tileSet, 2, tile.rect.x - camera.x,*/
-/*                           tile.rect.y - camera.y);*/
-/*    }*/
-/*  }*/
-/*}*/
