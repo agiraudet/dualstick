@@ -31,6 +31,8 @@ public:
   void capSpeed(void);
   void
   setLastUpdate(std::chrono::high_resolution_clock::time_point currentTime);
+  int getHp(void) const;
+  void injure(int damage);
 
 protected:
   int _id;
@@ -39,6 +41,7 @@ protected:
   float _angle;
   float _maxSpeed;
   int _size;
+  int _hp;
   std::chrono::high_resolution_clock::time_point _lastMove;
 };
 

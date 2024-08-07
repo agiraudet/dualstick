@@ -62,12 +62,12 @@ void Engine::run(void) {
     _client.getEvent(*this);
     _getEvent();
     if (_state == RUNNING) {
-      /*for (auto &p : _otherPlayers) {*/
-      /*  p.second.move();*/
-      /*}*/
-      /*for (auto &m : _hive.getMobs()) {*/
-      /*  m.second->move();*/
-      /*}*/
+      for (auto &p : _otherPlayers) {
+        p.second.move();
+      }
+      for (auto &m : _hive.getMobs()) {
+        m.second->move();
+      }
       _player.applyInput();
       _player.move(*_map);
       _centerCameraOnPlayer();
@@ -117,9 +117,12 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
     _player.setInput(RIGHT, state);
     break;
   case SDLK_SPACE:
-    ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
-    std::cout << "pew" << std::endl;
-    _client.sendMessage(pck);
+    if (_player.weapon->fire()) {
+      ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
+      std::cout << "pew" << std::endl;
+      _client.sendMessage(pck);
+    }
+    break;
   }
 }
 
@@ -221,6 +224,8 @@ void Engine::receiveMsg(MessageGameState *msg) {
   lastStamp = msg->stamp;
   for (int i = 0; i < msg->nplayer && i < MAX_N_PLAYER; i++)
     receiveMsg(&msg->players[i]);
+  if (msg->nmob < _hive.getMobs().size())
+    _hive.removeAbsentMobs(msg->mob, msg->nmob);
   for (int i = 0; i < msg->nmob && i < MAX_N_MOB; i++)
     receiveMsg(&msg->mob[i]);
 }

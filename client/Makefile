@@ -12,7 +12,8 @@ CMN_SRCS        := Entity.cpp \
 									 Mob.cpp \
 									 MobFactory.cpp \
 									 Player.cpp \
-									 Vector.cpp
+									 Vector.cpp \
+									 Weapon.cpp
 CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))
 
 BUILD_DIR       := ./build

@@ -1,14 +1,24 @@
 #include "Player.hpp"
 #include "Entity.hpp"
+#include "Weapon.hpp"
 #include <cmath>
 #include <cstdio>
 #include <ctime>
 
-Player::Player(void) : Entity() { _resetInputs(); }
+Player::Player(void) : Entity(), weapon(nullptr) {
+  _resetInputs();
+  weapon = new Weapon();
+}
 
-Player::Player(int id) : Entity(id) { _resetInputs(); }
+Player::Player(int id) : Entity(id), weapon(nullptr) {
+  _resetInputs();
+  weapon = new Weapon();
+}
 
-Player::~Player(void) {}
+Player::~Player(void) {
+  /*if (weapon)*/
+  /*  delete weapon;*/
+}
 
 void Player::setInput(PlayerInput input, bool state) { _inputs[input] = state; }
 

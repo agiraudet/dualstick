@@ -7,7 +7,7 @@ int main() {
   try {
     Server server;
     g_serverInstance = &server;
-    std::signal(SIGINT, signalHandler);
+    /*std::signal(SIGINT, signalHandler);*/
     server.loadGame("../assets/map");
     server.start();
   } catch (const std::exception &e) {

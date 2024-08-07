@@ -176,20 +176,25 @@ bool Map::checkCollision(int tileIndex) const {
 }
 bool Map::rayCast(Player &shooter,
                   std::unordered_map<int, std::shared_ptr<Mob>> &shooty) {
-  const double rayInc = 1;
-  const double maxDist = 2000;
-  const double angle = shooter.getAngle();
-  Vector ray;
-  for (double t = 0; t < maxDist; t += rayInc) {
-    ray.x = shooter.getPos().x + t * cos(angle);
-    ray.y = shooter.getPos().y + t * sin(angle);
-    for (auto &e : shooty) {
-      if (ray.distance(e.second->getPos()) <= e.second->getSize()) {
-        std::cout << "HIT MOB " << e.first << std::endl;
-        return true;
-      } else if (pointIsColliding(ray.x, ray.y)) {
-        std::cout << "hit wall" << std::endl;
+  if (shooter.weapon->fire()) {
+    const double rayInc = 1;
+    const double maxDist = shooter.weapon->getRange();
+    const double angle = shooter.getAngle();
+    Vector ray;
+    for (double t = 0; t < maxDist; t += rayInc) {
+      ray.x = shooter.getPos().x + t * cos(angle);
+      ray.y = shooter.getPos().y + t * sin(angle);
+      if (shooty.empty())
         return false;
+      for (auto &e : shooty) {
+        if (ray.distance(e.second->getPos()) <= e.second->getSize()) {
+          std::cout << "HIT MOB " << e.first << std::endl;
+          shooter.weapon->dealDamage(*e.second, t);
+          return true;
+        } else if (pointIsColliding(ray.x, ray.y)) {
+          std::cout << "hit wall" << std::endl;
+          return false;
+        }
       }
     }
   }

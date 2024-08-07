@@ -2,6 +2,7 @@
 #define PLAYER_HPP
 
 #include "Entity.hpp"
+#include "Weapon.hpp"
 
 #define MOVE_ABS
 
@@ -18,6 +19,9 @@ public:
 
 private:
   void _resetInputs(void);
+
+public:
+  Weapon *weapon;
 
 private:
   bool _inputs[N_INPUT];

@@ -5,12 +5,13 @@
 #include <cstdio>
 #include <ctime>
 
-Entity::Entity(void) : _id(0), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE) {
+Entity::Entity(void)
+    : _id(0), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE), _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
 Entity::Entity(int id)
-    : _id(id), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE) {
+    : _id(id), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE), _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
@@ -86,3 +87,7 @@ void Entity::setMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
 float Entity::getMaxSpeed(void) const { return _maxSpeed; }
 
 void Entity::capSpeed(void) { _velocity.capIntensity(_maxSpeed * _maxSpeed); }
+
+int Entity::getHp(void) const { return _hp; }
+
+void Entity::injure(int damage) { _hp -= damage; }

@@ -50,6 +50,8 @@ int Server::loadGame(std::string const &mapFile) {
   _flow.init();
   Vector pos(64 + 16, 128 + 16);
   _hive.createMob(BASIC, pos);
+  Vector pos2(32 * 22, 32 * 22);
+  _hive.createMob(BASIC, pos2);
   return 0;
 }
 
@@ -88,6 +90,7 @@ void Server::_run() {
 }
 
 void Server::_updateGameState(void) {
+  _hive.removeDeadMobs();
   for (const auto &p : _hive.getMobs()) {
     const auto &mob = p.second;
     mob->findClosest(_playersPtr);
