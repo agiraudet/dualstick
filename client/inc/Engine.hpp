@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "Anim.hpp"
 #include "Client.hpp"
 #include "MapRend.hpp"
 #include "Message.hpp"
@@ -61,6 +62,7 @@ private:
   MapRend *_map;
   MobFactory _hive;
   std::unordered_map<std::string, Tex> _atlas;
+  std::unordered_map<std::string, Anim> _anims;
 };
 
 #endif

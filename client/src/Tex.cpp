@@ -4,18 +4,21 @@
 #include <cstdio>
 Tex::Tex(void)
     : _src(""), _renderer(nullptr), _tex(nullptr), _frame({0, 0, 0, 0}),
-      _currentFrame(0), _nFrame(0), _width(0), _height(0) {}
+      _currentFrame(0), _nFrame(0), _width(0), _height(0), _framesPerRow(0),
+      _framesPerColumn(0) {}
 
 Tex::Tex(SDL_Renderer *renderer, const std::string &src)
     : _src(src), _renderer(renderer), _tex(nullptr), _frame({0, 0, 0, 0}),
-      _currentFrame(0), _nFrame(0), _width(0), _height(0) {
+      _currentFrame(0), _nFrame(0), _width(0), _height(0), _framesPerRow(0),
+      _framesPerColumn(0) {
   if (load(src))
     setFrameSize(_width);
 }
 
 Tex::Tex(SDL_Renderer *renderer, const std::string &src, int frameSize)
     : _src(src), _renderer(renderer), _tex(nullptr), _frame({0, 0, 0, 0}),
-      _currentFrame(0), _nFrame(0), _width(0), _height(0) {
+      _currentFrame(0), _nFrame(0), _width(0), _height(0), _framesPerRow(0),
+      _framesPerColumn(0) {
   if (load(src))
     setFrameSize(frameSize);
 }
@@ -23,7 +26,8 @@ Tex::Tex(SDL_Renderer *renderer, const std::string &src, int frameSize)
 Tex::Tex(Tex const &other)
     : _src(other._src), _renderer(other._renderer), _tex(nullptr),
       _frame(other._frame), _currentFrame(other._currentFrame),
-      _nFrame(other._nFrame), _width(other._width), _height(other._height) {
+      _nFrame(other._nFrame), _width(other._width), _height(other._height),
+      _framesPerRow(_framesPerRow), _framesPerColumn(other._framesPerColumn) {
   load(_src);
 }
 
@@ -42,6 +46,8 @@ Tex &Tex::operator=(const Tex &other) {
   _nFrame = other._nFrame;
   _width = other._width;
   _height = other._height;
+  _framesPerRow = other._framesPerRow;
+  _framesPerColumn = other._framesPerColumn;
   load(_src);
   return (*this);
 }
@@ -53,7 +59,9 @@ void Tex::setRenderer(SDL_Renderer *renderer) { _renderer = renderer; }
 void Tex::setFrameSize(int frameSize) {
   _frame.w = frameSize;
   _frame.h = frameSize;
-  _nFrame = (_width / _frame.w) * (_height / _frame.h);
+  _framesPerRow = _width / _frame.w;
+  _framesPerColumn = _height / _frame.h;
+  _nFrame = _framesPerRow * _framesPerColumn;
 }
 
 int Tex::getFrameSize(void) const { return _frame.w; }
@@ -78,8 +86,8 @@ void Tex::unload(void) {
 
 void Tex::selectFrame(int frame) {
   _currentFrame = frame;
-  _frame.x = (frame % (_width / _frame.w)) * _frame.w;
-  _frame.y = (frame / (_height / _frame.h)) * _frame.h;
+  _frame.x = (frame % _framesPerRow) * _frame.w;
+  _frame.y = (frame / _framesPerRow) * _frame.h;
 }
 
 void Tex::draw(int x, int y) {

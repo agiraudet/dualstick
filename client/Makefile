@@ -18,7 +18,8 @@ CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))
 
 BUILD_DIR       := ./build
 SRCS_DIR        := ./src
-SRCS            := Client.cpp \
+SRCS            := Anim.cpp \
+									 Client.cpp \
                    Engine.cpp \
 									 MapRend.cpp \
 									 Tex.cpp \

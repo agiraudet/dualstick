@@ -22,12 +22,12 @@ public:
   bool load(const std::string &src);
   void unload(void);
   void selectFrame(int frame);
-  void draw(int x, int y);
-  void draw(int x, int y, int frame);
-  void drawRot(int x, int y, float angle);
-  void drawRot(int x, int y, int frame, float angle);
+  virtual void draw(int x, int y);
+  virtual void draw(int x, int y, int frame);
+  virtual void drawRot(int x, int y, float angle);
+  virtual void drawRot(int x, int y, int frame, float angle);
 
-private:
+protected:
   std::string _src;
   SDL_Renderer *_renderer;
   SDL_Texture *_tex;
@@ -36,6 +36,8 @@ private:
   int _nFrame;
   int _width;
   int _height;
+  int _framesPerRow;
+  int _framesPerColumn;
 };
 
 #endif

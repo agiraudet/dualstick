@@ -1,5 +1,4 @@
 #include "Engine.hpp"
-#include "Atlas.hpp"
 #include "MapRend.hpp"
 #include "Message.hpp"
 #include "Timer.hpp"
@@ -80,21 +79,14 @@ void Engine::run(void) {
 }
 
 void Engine::_fillAtlas(void) {
-  /*_atlas->loadTexture("other", "../assets/other.png");*/
-  /*_atlas->loadTexture("player", "../assets/player.png");*/
-  /*_atlas->loadTexture("mob", "../assets/mob.png");*/
-  /*_atlas->loadTexture("tiles", "../assets/tileset.png", 32, 32);*/
-  /*_atlas->loadTexture("anim", "../assets/anim.png", 16, 16);*/
-
-  /*_atlas.emplace("other", Tex(_renderer, "../assets/other.png"));*/
-  /*_atlas.emplace("player", Tex(_renderer, "../assets/player.png"));*/
-  /*_atlas.emplace("mob", Tex(_renderer, "../assets/mob.png"));*/
-  /*_atlas.emplace("tiles", Tex(_renderer, "../assets/tileset.png", 32));*/
-
   _atlas["other"] = Tex(_renderer, "../assets/other.png");
   _atlas["player"] = Tex(_renderer, "../assets/player.png");
   _atlas["mob"] = Tex(_renderer, "../assets/mob.png");
   _atlas["tiles"] = Tex(_renderer, "../assets/tileset.png", 32);
+  _anims["anim"] = Anim(_renderer, "../assets/anim.png", 16);
+  /*_anims["anim"].setLoop(true);*/
+  _anims["anim"].setFps(120);
+  /*_anims["anim"].start();*/
 }
 
 void Engine::_getEvent(void) {
@@ -130,6 +122,7 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
       ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
       std::cout << "pew" << std::endl;
       _client.sendMessage(pck);
+      _anims["anim"].start();
     }
     break;
   }
@@ -163,6 +156,18 @@ void Engine::_render(void) {
         p.second.getPos().y - p.second.getSize() / 2 - _camera.y,
         p.second.getAngle() * (180.0f / M_PI));
   }
+  // TEST //
+  float offsetDistance = _player.getSize() * 0.75;
+  float playerAngleRadians = _player.getAngle();
+  float offsetX = cos(playerAngleRadians) * offsetDistance;
+  float offsetY = sin(playerAngleRadians) * offsetDistance;
+  float animPosX =
+      _player.getPos().x + offsetX - _player.getSize() / 2 - _camera.x;
+  float animPosY =
+      _player.getPos().y + offsetY - _player.getSize() / 2 - _camera.y;
+  _anims["anim"].drawRot(animPosX, animPosY,
+                         playerAngleRadians * (180.0f / M_PI) + 90.f);
+  ///////////
   SDL_RenderPresent(_renderer);
 }
 
