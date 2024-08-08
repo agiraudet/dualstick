@@ -36,10 +36,9 @@ public:
   bool pointIsColliding(int x, int y) const;
   bool boxIsColliding(int x, int y, int w, int h) const;
   bool checkCollision(int tileIndex) const;
-
-public:
-  bool rayCast(Player &shooter,
-               std::unordered_map<int, std::shared_ptr<Mob>> &shooty);
+  int rayCast(Player &shooter,
+              std::unordered_map<int, std::shared_ptr<Mob>> &shooty, int &hitX,
+              int &hitY);
 
 protected:
   std::vector<int> _parseLine(const std::string &line) const;

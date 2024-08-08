@@ -10,6 +10,7 @@
 #include <thread>
 
 #include "Entity.hpp"
+#include "Listener.hpp"
 #include "Message.hpp"
 #include "Player.hpp"
 #include "Server.hpp"
@@ -96,10 +97,10 @@ void Server::_updateGameState(void) {
     mob->findClosest(_playersPtr);
     Vector const &pos = mob->getPos();
     Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
-    aim.x =
-        (mob->getTileX() + aim.x) * _map.getTileSize() + _map.getTileSize() / 2;
-    aim.y =
-        (mob->getTileY() + aim.y) * _map.getTileSize() + _map.getTileSize() / 2;
+    aim.x = (mob->getTileX() + aim.x) * _map.getTileSize() +
+            (float)_map.getTileSize() / 2;
+    aim.y = (mob->getTileY() + aim.y) * _map.getTileSize() +
+            (float)_map.getTileSize() / 2;
     Vector dir = aim - pos;
     dir = dir.normalize();
     dir = dir * ENTITY_MAXSPEED;
@@ -177,6 +178,12 @@ void Server::playerUpdate(int id, Vector &pos, Vector &vel, float angle) {
 void Server::playerShoot(int id) {
   auto it = _players.find(id);
   if (it != _players.end()) {
-    _map.rayCast(it->second, _hive.getMobs());
+    int hitX = 0;
+    int hitY = 0;
+    int hit = _map.rayCast(it->second, _hive.getMobs(), hitX, hitY);
+    if (hit != -1) {
+      MessageMobHit msg = {hit, hitX, hitY};
+      _listener.msgOutAdd(id, packageMessage(msg, MOB_HIT, true), ALL);
+    }
   }
 }

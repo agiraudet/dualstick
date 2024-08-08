@@ -5,11 +5,9 @@
 
 #include <chrono>
 
-class Anim : public Tex {
+class Anim {
 public:
-  Anim(void);
-  Anim(SDL_Renderer *renderer, const std::string &src);
-  Anim(SDL_Renderer *renderer, const std::string &src, int frameSize);
+  Anim(Tex &tex);
   Anim(Anim const &other);
   ~Anim(void);
   Anim &operator=(const Anim &other);
@@ -20,17 +18,20 @@ public:
   void unpause(void);
   bool isPlaying(void) const;
   bool isPaused(void) const;
+  bool isStopped(void) const;
   bool isLooping(void) const;
   void setLoop(bool loop);
   void setFps(int fps);
 
-  void draw(int x, int y) override;
-  void drawRot(int x, int y, float angle) override;
+  void draw(int x, int y);
+  void drawRot(int x, int y, float angle);
 
 private:
   void _init(void);
+  void _nextFrame(void);
 
 private:
+  Tex &_tex;
   bool _paused;
   bool _playing;
   bool _loop;

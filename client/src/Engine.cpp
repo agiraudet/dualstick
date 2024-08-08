@@ -1,5 +1,5 @@
 #include "Engine.hpp"
-#include "MapRend.hpp"
+#include "DisplayManager.hpp"
 #include "Message.hpp"
 #include "Timer.hpp"
 #include "Vector.hpp"
@@ -23,25 +23,13 @@
 
 Engine::Engine(void)
     : _client(Client()), _state(LOADING),
-      _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99)}),
-      _window(nullptr), _renderer(nullptr),
-      _camera({0, 0, SCR_WIDTH, SCR_HEIGHT}) {
-  SDL_Init(SDL_INIT_VIDEO);
-  _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
-                             SDL_WINDOWPOS_UNDEFINED, SCR_WIDTH, SCR_HEIGHT,
-                             SDL_WINDOW_SHOWN);
-  _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
-  _fillAtlas();
-  _map = new MapRend();
+      _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99)}) {
+  _map = new Map();
   Vector initPos(64.f, 64.f);
   _player.setPos(initPos);
 }
 
-Engine::~Engine(void) {
-  SDL_DestroyRenderer(_renderer);
-  SDL_DestroyWindow(_window);
-  SDL_Quit();
-}
+Engine::~Engine(void) {}
 
 int Engine::connect(const std::string &host, enet_uint16 port) {
   try {
@@ -67,26 +55,15 @@ void Engine::run(void) {
       }
       _player.applyInput();
       _player.move(*_map);
-      _centerCameraOnPlayer();
+      _dm.centerCamera(_player);
       int mouseX, mouseY;
       SDL_GetMouseState(&mouseX, &mouseY);
-      _player.aimAngle(mouseX + _camera.x, mouseY + _camera.y);
+      _player.aimAngle(mouseX + _dm.getCamX(), mouseY + _dm.getCamY());
       _NotifyPlayerUpdate();
-      _render();
+      _dm.renderFrame(_player, _otherPlayers, _hive.getMobs());
     }
     fpsTimer.capFps();
   }
-}
-
-void Engine::_fillAtlas(void) {
-  _atlas["other"] = Tex(_renderer, "../assets/other.png");
-  _atlas["player"] = Tex(_renderer, "../assets/player.png");
-  _atlas["mob"] = Tex(_renderer, "../assets/mob.png");
-  _atlas["tiles"] = Tex(_renderer, "../assets/tileset.png", 32);
-  _anims["anim"] = Anim(_renderer, "../assets/anim.png", 16);
-  /*_anims["anim"].setLoop(true);*/
-  _anims["anim"].setFps(120);
-  /*_anims["anim"].start();*/
 }
 
 void Engine::_getEvent(void) {
@@ -122,53 +99,10 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
       ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
       std::cout << "pew" << std::endl;
       _client.sendMessage(pck);
-      _anims["anim"].start();
+      _dm.addEntityFx(_player, SHOOT, _player.getSize() * 0.75, 90.f).start();
     }
     break;
   }
-}
-
-void Engine::_centerCameraOnPlayer(void) {
-  _camera.x = (_player.getPos().x + (float)_player.getSize() / 2) -
-              (float)SCR_WIDTH / 2.f;
-  _camera.y = (_player.getPos().y + (float)_player.getSize() / 2) -
-              (float)SCR_HEIGHT / 2.f;
-}
-
-void Engine::_render(void) {
-  SDL_SetRenderDrawColor(_renderer, 63, 56, 81, 255);
-  SDL_RenderClear(_renderer);
-
-  _map->render(_camera, _atlas["tiles"]);
-  for (const auto &p : _hive.getMobs()) {
-    const auto &mob = p.second;
-    _atlas["mob"].drawRot(mob->getPos().x - mob->getSize() / 2 - _camera.x,
-                          mob->getPos().y - mob->getSize() / 2 - _camera.y,
-                          mob->getAngle() * (180.0f / M_PI));
-  }
-  _atlas["player"].drawRot(
-      _player.getPos().x - _player.getSize() / 2 - _camera.x,
-      _player.getPos().y - _player.getSize() / 2 - _camera.y,
-      _player.getAngle() * (180.0f / M_PI));
-  for (const auto &p : _otherPlayers) {
-    _atlas["other"].drawRot(
-        p.second.getPos().x - p.second.getSize() / 2 - _camera.x,
-        p.second.getPos().y - p.second.getSize() / 2 - _camera.y,
-        p.second.getAngle() * (180.0f / M_PI));
-  }
-  // TEST //
-  float offsetDistance = _player.getSize() * 0.75;
-  float playerAngleRadians = _player.getAngle();
-  float offsetX = cos(playerAngleRadians) * offsetDistance;
-  float offsetY = sin(playerAngleRadians) * offsetDistance;
-  float animPosX =
-      _player.getPos().x + offsetX - _player.getSize() / 2 - _camera.x;
-  float animPosY =
-      _player.getPos().y + offsetY - _player.getSize() / 2 - _camera.y;
-  _anims["anim"].drawRot(animPosX, animPosY,
-                         playerAngleRadians * (180.0f / M_PI) + 90.f);
-  ///////////
-  SDL_RenderPresent(_renderer);
 }
 
 void Engine::_NotifyPlayerUpdate(void) {
@@ -231,6 +165,14 @@ void Engine::receiveMsg(MessageMobUpdate *msg) {
   _hive.updateMob(msg->id, msg->type, msg->pos, msg->vel, msg->angle);
 }
 
+void Engine::receiveMsg(MessageMobHit *msg) {
+  auto mob = _hive.getMobById(msg->id);
+  if (mob)
+    _dm.addStaticFx(DAMAGE, mob->getPos().x - mob->getSize() / 2,
+                    mob->getPos().y - mob->getSize() / 2)
+        .start();
+}
+
 void Engine::receiveMsg(MessageGameState *msg) {
   static uint32_t lastStamp = 0;
   if (msg->stamp <= lastStamp)
@@ -248,7 +190,7 @@ void Engine::receiveMsg(MessageMap *msg) {
   _map->rcvMsg(*msg);
   if (_map->countMissingMsg() == 0 && !_map->isLoaded()) {
     if (_map->loadFromMsg()) {
-      _map->createTiles();
+      _dm.generateMapTiles(*_map);
       _state = RUNNING;
       printf("[Map] Loaded successfully\n");
     }

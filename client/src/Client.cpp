@@ -135,6 +135,12 @@ int Client::_handleReceive(ENetEvent &event, Engine &eng) {
     eng.receiveMsg(static_cast<MessageMobUpdate *>(msgBody));
     break;
   }
+  case MOB_HIT: {
+    if (bodyLen < sizeof(MessageMobHit))
+      return -1;
+    eng.receiveMsg(static_cast<MessageMobHit *>(msgBody));
+    break;
+  }
   case GAME_STATE: {
     if (bodyLen < sizeof(MessageGameState))
       return -1;

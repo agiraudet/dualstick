@@ -46,6 +46,14 @@ void MobFactory::createMob(mobType type, Vector &pos, int id) {
   }
 }
 
+std::shared_ptr<Mob> MobFactory::getMobById(int id) {
+  auto it = _mobs.find(id);
+  if (it != _mobs.end())
+    return it->second;
+  else
+    return nullptr;
+}
+
 void MobFactory::updateMob(int id, mobType type, Vector &pos, Vector &vel,
                            float angle) {
   if (_mobs.empty()) {

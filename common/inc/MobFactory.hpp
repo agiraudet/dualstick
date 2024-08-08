@@ -14,6 +14,7 @@ public:
   void createMob(mobType, int x, int y);
   void createMob(mobType, Vector &pos);
   void createMob(mobType, Vector &pos, int id);
+  std::shared_ptr<Mob> getMobById(int id);
   void updateMob(int id, mobType type, Vector &pos, Vector &vel, float angle);
   void craftMobMsgState(MessageGameState &msg);
   int size(void) const;

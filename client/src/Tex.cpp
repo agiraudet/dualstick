@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_render.h>
 #include <cstdio>
+
 Tex::Tex(void)
     : _src(""), _renderer(nullptr), _tex(nullptr), _frame({0, 0, 0, 0}),
       _currentFrame(0), _nFrame(0), _width(0), _height(0), _framesPerRow(0),
@@ -27,7 +28,8 @@ Tex::Tex(Tex const &other)
     : _src(other._src), _renderer(other._renderer), _tex(nullptr),
       _frame(other._frame), _currentFrame(other._currentFrame),
       _nFrame(other._nFrame), _width(other._width), _height(other._height),
-      _framesPerRow(_framesPerRow), _framesPerColumn(other._framesPerColumn) {
+      _framesPerRow(other._framesPerRow),
+      _framesPerColumn(other._framesPerColumn) {
   load(_src);
 }
 
@@ -65,6 +67,10 @@ void Tex::setFrameSize(int frameSize) {
 }
 
 int Tex::getFrameSize(void) const { return _frame.w; }
+
+int Tex::getCurrentFrame(void) const { return _currentFrame; }
+
+int Tex::getNFrame(void) const { return _nFrame; }
 
 bool Tex::load(const std::string &src) {
   if (!_renderer)

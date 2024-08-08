@@ -2,7 +2,6 @@
 #define MESSAGE_HPP
 
 #include <SDL2/SDL_rect.h>
-#include <algorithm>
 #include <array>
 #include <cstring>
 #include <enet/enet.h>
@@ -23,6 +22,7 @@ enum MessageType {
   PLR_ID,
   PLR_SHOOT,
   MOB_UPDATE,
+  MOB_HIT,
   GAME_STATE,
   MAP
 };
@@ -64,6 +64,12 @@ struct MessageMobUpdate {
   float angle;
   Vector pos;
   Vector vel;
+};
+
+struct MessageMobHit {
+  int id;
+  int hitX;
+  int hitY;
 };
 
 struct MessageGameState {

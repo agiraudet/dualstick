@@ -174,8 +174,9 @@ bool Map::checkCollision(int tileIndex) const {
     return false;
   return true;
 }
-bool Map::rayCast(Player &shooter,
-                  std::unordered_map<int, std::shared_ptr<Mob>> &shooty) {
+int Map::rayCast(Player &shooter,
+                 std::unordered_map<int, std::shared_ptr<Mob>> &shooty,
+                 int &hitX, int &hitY) {
   if (shooter.weapon->fire()) {
     const double rayInc = 1;
     const double maxDist = shooter.weapon->getRange();
@@ -185,18 +186,18 @@ bool Map::rayCast(Player &shooter,
       ray.x = shooter.getPos().x + t * cos(angle);
       ray.y = shooter.getPos().y + t * sin(angle);
       if (shooty.empty())
-        return false;
+        return -1;
       for (auto &e : shooty) {
         if (ray.distance(e.second->getPos()) <= e.second->getSize()) {
-          std::cout << "HIT MOB " << e.first << std::endl;
           shooter.weapon->dealDamage(*e.second, t);
-          return true;
+          hitX = ray.x;
+          hitY = ray.y;
+          return e.first;
         } else if (pointIsColliding(ray.x, ray.y)) {
-          std::cout << "hit wall" << std::endl;
-          return false;
+          return -1;
         }
       }
     }
   }
-  return false;
+  return -1;
 }

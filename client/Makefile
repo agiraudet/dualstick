@@ -20,8 +20,8 @@ BUILD_DIR       := ./build
 SRCS_DIR        := ./src
 SRCS            := Anim.cpp \
 									 Client.cpp \
+									 DisplayManager.cpp \
                    Engine.cpp \
-									 MapRend.cpp \
 									 Tex.cpp \
                    Timer.cpp \
                    main.cpp

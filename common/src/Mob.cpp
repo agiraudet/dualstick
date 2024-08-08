@@ -3,7 +3,7 @@
 
 int Mob::count = 0;
 
-Mob::Mob(void) : Entity(count++) { _maxSpeed *= 0.8; }
+Mob::Mob(void) : Entity(count++) { _maxSpeed *= 0.5; }
 
 void Mob::setType(mobType type) { _type = type; }
 
