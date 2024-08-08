@@ -1,7 +1,9 @@
 #include "DisplayManager.hpp"
 #include "Entity.hpp"
-#include <SDL2/SDL_rect.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <algorithm>
+#include <string>
 
 DM_EntityFx::DM_EntityFx(Entity &entity, Anim &anim, float offset,
                          float angleAdjust)
@@ -51,12 +53,14 @@ DisplayManager::DisplayManager(void)
       _camera({0, 0, 0, 0}) {
   resize(640, 480);
   SDL_Init(SDL_INIT_VIDEO);
+  TTF_Init();
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, _width, _height,
                              SDL_WINDOW_SHOWN);
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
   _fillAtlas();
   _fillAnims();
+  _fillGuiText();
 }
 
 DisplayManager::~DisplayManager(void) {
@@ -129,6 +133,9 @@ void DisplayManager::renderFrame(
     fx.render(_camera);
   for (auto &fx : _fxEntity)
     fx.render(_camera);
+  _updateGuiText(player);
+  for (auto &txt : _guiTexts)
+    txt.second.draw();
   SDL_RenderPresent(_renderer);
   removeStoppedFx();
 }
@@ -147,6 +154,18 @@ void DisplayManager::_fillAnims(void) {
   _anims.at(SHOOT).setFps(120);
   _anims.emplace(DAMAGE, Anim(_atlas[ANIM_DAMAGE]));
   _anims.at(DAMAGE).setFps(120);
+}
+
+void DisplayManager::_fillGuiText(void) {
+  _guiTexts.emplace(AMMO_CLIP, Text(_renderer));
+  Text &clipText = _guiTexts.at(AMMO_CLIP);
+  clipText.setPointSize(24);
+  clipText.setText("-");
+  clipText.setPos(10, 440);
+  _guiTexts.emplace(AMMO_BELT, Text(_renderer));
+  Text &beltText = _guiTexts.at(AMMO_BELT);
+  beltText.setText("-");
+  beltText.setPos(10, 460);
 }
 
 void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
@@ -176,4 +195,9 @@ void DisplayManager::removeStoppedFx(void) {
       std::remove_if(_fxStatic.begin(), _fxStatic.end(),
                      [](const DM_StaticFx &fx) { return fx.anim.isStopped(); }),
       _fxStatic.end());
+}
+
+void DisplayManager::_updateGuiText(Player const &player) {
+  _guiTexts.at(AMMO_CLIP).setText(std::to_string(player.weapon->getClip()));
+  _guiTexts.at(AMMO_BELT).setText(std::to_string(player.weapon->getAmmo()));
 }

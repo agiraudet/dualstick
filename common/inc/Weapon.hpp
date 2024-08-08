@@ -14,6 +14,8 @@ public:
   bool fire(void);
   void dealDamage(Entity &target, double dist);
   double getRange(void) const;
+  int getAmmo(void) const;
+  int getClip(void) const;
 
 private:
   int _damage;

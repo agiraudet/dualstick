@@ -2,7 +2,6 @@
 #define DISPLAYMANAGER_HPP
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_video.h>
 #include <unordered_map>
 #include <vector>
 
@@ -11,10 +10,13 @@
 #include "Mob.hpp"
 #include "Player.hpp"
 #include "Tex.hpp"
+#include "Text.hpp"
 
 enum DMSprite { PLR_OTHER, PLR_MAIN, MOB, TILES, ANIM_SHOOT, ANIM_DAMAGE };
 
 enum DMAnim { SHOOT, DAMAGE };
+
+enum DMText { AMMO_CLIP, AMMO_BELT };
 
 struct Tile {
   SDL_Rect rect;
@@ -61,6 +63,8 @@ public:
 private:
   void _fillAtlas(void);
   void _fillAnims(void);
+  void _fillGuiText(void);
+  void _updateGuiText(Player const &player);
   void _renderEntity(Entity const &entity, DMSprite sprite);
   void _renderMap(void);
 
@@ -72,14 +76,10 @@ private:
   SDL_Rect _camera;
   std::unordered_map<DMSprite, Tex> _atlas;
   std::unordered_map<DMAnim, Anim> _anims;
+  std::unordered_map<DMText, Text> _guiTexts;
   std::vector<std::vector<Tile>> _mapTiles;
   std::vector<DM_EntityFx> _fxEntity;
   std::vector<DM_StaticFx> _fxStatic;
 };
-
-// TODO
-//  - anim queue
-//  - add map
-//  - add scaling
 
 #endif

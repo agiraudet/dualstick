@@ -2,7 +2,7 @@
 #include <cstdio>
 
 Weapon::Weapon(void)
-    : _damage(5), _range(3000), _ammo(100), _clip(10), _maxClip(10), _cd(500),
+    : _damage(5), _range(3000), _ammo(100), _clip(10), _maxClip(10), _cd(100),
       _reloadTime(1000) {
   _lastFired = std::chrono::high_resolution_clock::now();
   _lastReload = _lastFired;
@@ -12,7 +12,7 @@ Weapon::~Weapon(void) {}
 
 void Weapon::reload(void) {
   const auto currentTime = std::chrono::high_resolution_clock::now();
-  if (_ammo < 0 || currentTime - _lastReload < _reloadTime ||
+  if (_ammo <= 0 || currentTime - _lastReload < _reloadTime ||
       currentTime - _lastFired < _cd)
     return;
   if (_ammo >= _maxClip) {
@@ -28,7 +28,7 @@ void Weapon::reload(void) {
 
 bool Weapon::fire(void) {
   const auto currentTime = std::chrono::high_resolution_clock::now();
-  if (_clip < 0 || currentTime - _lastReload < _reloadTime ||
+  if (_clip <= 0 || currentTime - _lastReload < _reloadTime ||
       currentTime - _lastFired < _cd)
     return false;
   _clip--;
@@ -39,3 +39,7 @@ bool Weapon::fire(void) {
 void Weapon::dealDamage(Entity &target, double dist) { target.injure(_damage); }
 
 double Weapon::getRange(void) const { return _range; }
+
+int Weapon::getAmmo(void) const { return _ammo; }
+
+int Weapon::getClip(void) const { return _clip; }

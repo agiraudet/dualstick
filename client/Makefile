@@ -1,6 +1,6 @@
 NAME            := c
 
-DEPS            := -lSDL2 -lSDL2_image -lenet
+DEPS            := -lSDL2 -lSDL2_image -lSDL2_ttf -lenet
 
 CMN_DIR         := ../common
 INC_DIR         := ./inc $(CMN_DIR)/inc
@@ -23,6 +23,7 @@ SRCS            := Anim.cpp \
 									 DisplayManager.cpp \
                    Engine.cpp \
 									 Tex.cpp \
+									 Text.cpp \
                    Timer.cpp \
                    main.cpp
 OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
