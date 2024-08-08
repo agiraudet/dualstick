@@ -102,6 +102,9 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
       _dm.addEntityFx(_player, SHOOT, _player.getSize() * 0.75, 90.f).start();
     }
     break;
+  case SDLK_r:
+    _player.weapon->reload();
+    break;
   }
 }
 

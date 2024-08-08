@@ -1,4 +1,5 @@
 #include "Weapon.hpp"
+#include <cstdio>
 
 Weapon::Weapon(void)
     : _damage(5), _range(3000), _ammo(100), _clip(10), _maxClip(10), _cd(500),
@@ -21,7 +22,8 @@ void Weapon::reload(void) {
     _clip += _ammo;
     _ammo = 0;
   }
-  _lastFired = std::chrono::high_resolution_clock::now();
+  _lastReload = std::chrono::high_resolution_clock::now();
+  printf("Reload...\n");
 }
 
 bool Weapon::fire(void) {
