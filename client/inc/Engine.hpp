@@ -31,15 +31,17 @@ public:
   void receiveMsg(MessagePlayerDisco *msg);
   void receiveMsg(MessagePlayerUpdate *msg);
   void receiveMsg(MessagePlayerID *msg);
+  void receiveMsg(MessagePlayerDead *msg);
   void receiveMsg(MessageMobUpdate *msg);
   void receiveMsg(MessageMobHit *msg);
+  void receiveMsg(MessageMobAttack *msg);
   void receiveMsg(MessageGameState *msg);
   void receiveMsg(MessageMap *msg);
 
 private:
   void _removePlayer(int id);
   void _addPlayer(int id);
-  void _updatePlayer(int id, Vector &pos, Vector &vel, float angle);
+  void _updatePlayer(int id, Vector &pos, Vector &vel, float angle, int hp);
   void _fillAtlas(void);
   void _getEvent(void);
   void _processInput(SDL_Keycode &sym, bool state);

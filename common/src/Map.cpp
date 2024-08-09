@@ -179,7 +179,7 @@ int Map::rayCast(Player &shooter,
                  int &hitX, int &hitY) {
   if (shooter.weapon->fire()) {
     const double rayInc = 1;
-    const double maxDist = shooter.weapon->getRange();
+    const double maxDist = shooter.weapon->range;
     const double angle = shooter.getAngle();
     Vector ray;
     for (double t = 0; t < maxDist; t += rayInc) {

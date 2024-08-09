@@ -15,6 +15,7 @@
 #include "Player.hpp"
 #include "Server.hpp"
 #include "Vector.hpp"
+#include "Weapon.hpp"
 
 Server *g_serverInstance = nullptr;
 
@@ -51,7 +52,7 @@ int Server::loadGame(std::string const &mapFile) {
   _flow.init();
   Vector pos(64 + 16, 128 + 16);
   _hive.createMob(BASIC, pos);
-  Vector pos2(32 * 22, 32 * 22);
+  Vector pos2(32 * 22, 32 * 24);
   _hive.createMob(BASIC, pos2);
   return 0;
 }
@@ -94,7 +95,7 @@ void Server::_updateGameState(void) {
   _hive.removeDeadMobs();
   for (const auto &p : _hive.getMobs()) {
     const auto &mob = p.second;
-    mob->findClosest(_playersPtr);
+    Player *target = mob->findClosest(_playersPtr);
     Vector const &pos = mob->getPos();
     Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
     aim.x = (mob->getTileX() + aim.x) * _map.getTileSize() +
@@ -107,6 +108,14 @@ void Server::_updateGameState(void) {
     mob->setVel(dir);
     mob->capSpeed();
     mob->move();
+    if (target && mob->weapon) {
+      if (mob->getPos().distance(target->getPos()) < mob->weapon->range &&
+          mob->weapon->fire()) {
+        mob->weapon->dealDamage(*target, 0.f);
+        MessageMobAttack msg = {mob->getId(), target->getId()};
+        _listener.msgOutAdd(-1, packageMessage(msg, MOB_ATTACK, true), ALL);
+      }
+    }
   }
 }
 
@@ -139,6 +148,7 @@ void Server::_craftMsgGameState(void) {
     _msgGameState.players[i].vel = u.second.getVel();
     _msgGameState.players[i].pos = u.second.getPos();
     _msgGameState.players[i].id = u.second.getId();
+    _msgGameState.players[i].hp = u.second.getHp();
     i++;
   }
   _hive.craftMobMsgState(_msgGameState);

@@ -1,8 +1,9 @@
-#ifndef WEAPON_HPP
-#define WEAPON_HPP
+#ifndef WEAPONHPP
+#define WEAPONHPP
 
-#include "Entity.hpp"
 #include <chrono>
+
+class Entity;
 
 class Weapon {
 
@@ -13,20 +14,20 @@ public:
   void reload(void);
   bool fire(void);
   void dealDamage(Entity &target, double dist);
-  double getRange(void) const;
-  int getAmmo(void) const;
-  int getClip(void) const;
+
+public:
+  bool unlimitedAmmo;
+  int damage;
+  double range;
+  int ammo;
+  int clip;
+  int maxClip;
+  std::chrono::milliseconds cd;
+  std::chrono::milliseconds reloadTime;
 
 private:
-  int _damage;
-  double _range;
-  int _ammo;
-  int _clip;
-  int _maxClip;
-  std::chrono::milliseconds _cd;
-  std::chrono::milliseconds _reloadTime;
   std::chrono::high_resolution_clock::time_point _lastFired;
   std::chrono::high_resolution_clock::time_point _lastReload;
 };
 
-#endif //! WEAPON_HPP
+#endif //! WEAPONHPP

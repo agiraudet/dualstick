@@ -20,9 +20,11 @@ enum MessageType {
   PLR_DISCO,
   PLR_UPDATE,
   PLR_ID,
+  PLR_DEAD,
   PLR_SHOOT,
   MOB_UPDATE,
   MOB_HIT,
+  MOB_ATTACK,
   GAME_STATE,
   MAP
 };
@@ -45,9 +47,14 @@ struct MessagePlayerUpdate {
   float angle;
   Vector pos;
   Vector vel;
+  int hp;
 };
 
 struct MessagePlayerID {
+  int id;
+};
+
+struct MessagePlayerDead {
   int id;
 };
 
@@ -70,6 +77,11 @@ struct MessageMobHit {
   int id;
   int hitX;
   int hitY;
+};
+
+struct MessageMobAttack {
+  int mobId;
+  int playerId;
 };
 
 struct MessageGameState {

@@ -43,7 +43,7 @@ private:
   Map _map;
   FlowMap _flow;
   std::unordered_map<int, Player> _players;
-  std::vector<Player const *> _playersPtr;
+  std::vector<Player *> _playersPtr;
   MobFactory _hive;
   MessageGameState _msgGameState;
 };

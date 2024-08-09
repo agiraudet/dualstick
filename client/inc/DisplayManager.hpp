@@ -12,9 +12,17 @@
 #include "Tex.hpp"
 #include "Text.hpp"
 
-enum DMSprite { PLR_OTHER, PLR_MAIN, MOB, TILES, ANIM_SHOOT, ANIM_DAMAGE };
+enum DMSprite {
+  PLR_OTHER,
+  PLR_MAIN,
+  MOB,
+  TILES,
+  ANIM_SHOOT,
+  ANIM_DAMAGE,
+  ANIM_MOB_ATCK
+};
 
-enum DMAnim { SHOOT, DAMAGE };
+enum DMAnim { SHOOT, DAMAGE, MOB_ATCK };
 
 enum DMText { AMMO_CLIP, AMMO_BELT };
 

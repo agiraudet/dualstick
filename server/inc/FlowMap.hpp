@@ -23,7 +23,7 @@ public:
   Vector getDir(int x, int y);
   void startUpdating(void);
   void stopUpdating(void);
-  void updatePlayerVec(std::vector<Player const *> *playerVec);
+  void updatePlayerVec(std::vector<Player *> *playerVec);
 
 private:
   void _update(int value, int x, int y);
@@ -34,15 +34,13 @@ private:
   Map const &_map;
   std::vector<std::vector<int>> _dataA;
   std::vector<std::vector<int>> _dataB;
-  std::vector<Player const *> *_playerVec;
+  std::vector<Player *> *_playerVec;
   std::atomic<std::vector<std::vector<int>> *> _readBuffer;
   std::atomic<std::vector<std::vector<int>> *> _writeBuffer;
   int _width;
   int _height;
 
 private:
-  /*std::mutex _WMutex;*/
-  /*std::mutex _ROMutex;*/
   std::mutex _playerMutex;
   std::thread _updateThread;
   std::atomic<bool> _running;

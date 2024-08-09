@@ -48,8 +48,8 @@ Text::Text(SDL_Renderer *renderer)
 
 Text::Text(Text const &other)
     : _fontPath(other._fontPath), _pointSize(other._pointSize),
-      _text(other._text), _renderer(other._renderer), _font(other._font),
-      _color(other._color), _rect(other._rect) {
+      _text(other._text), _renderer(other._renderer), _texture(nullptr),
+      _font(other._font), _color(other._color), _rect(other._rect) {
   _generateTexture();
 }
 
@@ -126,11 +126,11 @@ void Text::draw(void) {
 }
 
 void Text::_generateTexture(void) {
-  if (_texture) {
-    SDL_DestroyTexture(_texture);
-    _texture = nullptr;
-  }
   if (_font && !_text.empty()) {
+    if (_texture) {
+      SDL_DestroyTexture(_texture);
+      _texture = nullptr;
+    }
     SDL_Surface *surface = TTF_RenderText_Blended(_font, _text.c_str(), _color);
     _texture = SDL_CreateTextureFromSurface(_renderer, surface);
     _rect = {_rect.x, _rect.y, surface->w, surface->h};

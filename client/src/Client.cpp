@@ -10,7 +10,8 @@
 
 Client::Client() : _client(nullptr), _peer(nullptr) {
   if (enet_initialize() != 0) {
-    throw std::runtime_error("An error occurred while initializing ENet.");
+    throw std::runtime_error(
+        "[Client] An error occurred while initializing ENet.");
   }
   atexit(enet_deinitialize);
 }
@@ -23,8 +24,8 @@ Client::~Client() {
 void Client::init(const std::string &host, enet_uint16 port) {
   _client = enet_host_create(nullptr, 1, 2, 0, 0);
   if (_client == nullptr) {
-    throw std::runtime_error(
-        "An error occurred while trying to create an ENet _client host.");
+    throw std::runtime_error("[Client] An error occurred while trying to "
+                             "create an ENet _client host.");
   }
 
   ENetAddress address;
@@ -34,17 +35,17 @@ void Client::init(const std::string &host, enet_uint16 port) {
   _peer = enet_host_connect(_client, &address, 2, 0);
   if (_peer == nullptr) {
     throw std::runtime_error(
-        "No available _peers for initiating an ENet connection.");
+        "[Client] No available _peers for initiating an ENet connection.");
   }
 
   ENetEvent event;
   if (enet_host_service(_client, &event, 5000) > 0 &&
       event.type == ENET_EVENT_TYPE_CONNECT) {
-    std::cout << "Connection to " << host << ":" << port << " succeeded."
-              << std::endl;
+    std::cout << "[Client] Connection to " << host << ":" << port
+              << " succeeded." << std::endl;
   } else {
     enet_peer_reset(_peer);
-    throw std::runtime_error("Connection to " + host + ":" +
+    throw std::runtime_error("[Client] Connection to " + host + ":" +
                              std::to_string(port) + " failed.");
   }
 }
@@ -66,7 +67,7 @@ void Client::disconnect(void) {
       enet_packet_destroy(event.packet);
       break;
     case ENET_EVENT_TYPE_DISCONNECT:
-      puts("Disconnection succeeded.");
+      std::cout << "[Client] Disconnection succeeded." << std::endl;
       break;
     default:
       break;
@@ -83,7 +84,7 @@ void Client::getEvent(Engine &eng) {
       enet_packet_destroy(event.packet);
       break;
     case ENET_EVENT_TYPE_DISCONNECT:
-      std::cout << "Disconnected from server." << std::endl;
+      std::cout << "[Client] Disconnected from server." << std::endl;
       return;
     default:
       break;
@@ -139,6 +140,12 @@ int Client::_handleReceive(ENetEvent &event, Engine &eng) {
     if (bodyLen < sizeof(MessageMobHit))
       return -1;
     eng.receiveMsg(static_cast<MessageMobHit *>(msgBody));
+    break;
+  }
+  case MOB_ATTACK: {
+    if (bodyLen < sizeof(MessageMobAttack))
+      return -1;
+    eng.receiveMsg(static_cast<MessageMobAttack *>(msgBody));
     break;
   }
   case GAME_STATE: {

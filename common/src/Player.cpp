@@ -5,20 +5,19 @@
 #include <cstdio>
 #include <ctime>
 
-Player::Player(void) : Entity(), weapon(nullptr) {
+Player::Player(void) : Entity() {
+  _alive = true;
   _resetInputs();
   weapon = new Weapon();
 }
 
-Player::Player(int id) : Entity(id), weapon(nullptr) {
+Player::Player(int id) : Entity(id) {
+  _alive = true;
   _resetInputs();
   weapon = new Weapon();
 }
 
-Player::~Player(void) {
-  /*if (weapon)*/
-  /*  delete weapon;*/
-}
+Player::~Player(void) {}
 
 void Player::setInput(PlayerInput input, bool state) { _inputs[input] = state; }
 

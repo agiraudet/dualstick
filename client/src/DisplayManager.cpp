@@ -51,6 +51,7 @@ void DM_StaticFx::render(SDL_Rect const &camera) {
 DisplayManager::DisplayManager(void)
     : _width(0), _height(0), _window(nullptr), _renderer(nullptr),
       _camera({0, 0, 0, 0}) {
+  /*resize(640 * 2, 480 * 2);*/
   resize(640, 480);
   SDL_Init(SDL_INIT_VIDEO);
   TTF_Init();
@@ -126,7 +127,8 @@ void DisplayManager::renderFrame(
   _renderMap();
   for (auto const &o : otherPlayers)
     _renderEntity(o.second, PLR_OTHER);
-  _renderEntity(player, PLR_MAIN);
+  if (player.isAlive())
+    _renderEntity(player, PLR_MAIN);
   for (auto &m : mobs)
     _renderEntity(*m.second, MOB);
   for (auto &fx : _fxStatic)
@@ -147,12 +149,15 @@ void DisplayManager::_fillAtlas(void) {
   _atlas.emplace(TILES, Tex(_renderer, "../assets/tileset.png", 32));
   _atlas.emplace(ANIM_SHOOT, Tex(_renderer, "../assets/anim.png", 16));
   _atlas.emplace(ANIM_DAMAGE, Tex(_renderer, "../assets/damage.png", 16));
+  _atlas.emplace(ANIM_MOB_ATCK, Tex(_renderer, "../assets/mob_attack.png", 16));
 }
 
 void DisplayManager::_fillAnims(void) {
   _anims.emplace(SHOOT, Anim(_atlas[ANIM_SHOOT]));
   _anims.at(SHOOT).setFps(120);
   _anims.emplace(DAMAGE, Anim(_atlas[ANIM_DAMAGE]));
+  _anims.at(DAMAGE).setFps(120);
+  _anims.emplace(MOB_ATCK, Anim(_atlas[ANIM_MOB_ATCK]));
   _anims.at(DAMAGE).setFps(120);
 }
 
@@ -198,6 +203,6 @@ void DisplayManager::removeStoppedFx(void) {
 }
 
 void DisplayManager::_updateGuiText(Player const &player) {
-  _guiTexts.at(AMMO_CLIP).setText(std::to_string(player.weapon->getClip()));
-  _guiTexts.at(AMMO_BELT).setText(std::to_string(player.weapon->getAmmo()));
+  _guiTexts.at(AMMO_CLIP).setText(std::to_string(player.weapon->clip));
+  _guiTexts.at(AMMO_BELT).setText(std::to_string(player.weapon->ammo));
 }

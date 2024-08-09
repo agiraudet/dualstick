@@ -3,6 +3,7 @@
 
 #include "Map.hpp"
 #include "Vector.hpp"
+#include "Weapon.hpp"
 #include <chrono>
 
 #define ENTITY_MAXSPEED 400.f
@@ -32,9 +33,16 @@ public:
   void
   setLastUpdate(std::chrono::high_resolution_clock::time_point currentTime);
   int getHp(void) const;
+  void setHp(int hp);
   void injure(int damage);
+  void setAlive(bool alive);
+  bool isAlive(void) const;
+
+public:
+  Weapon *weapon;
 
 protected:
+  bool _alive;
   int _id;
   Vector _velocity;
   Vector _position;

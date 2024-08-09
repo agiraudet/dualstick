@@ -31,6 +31,8 @@ void FlowMap::reset(void) {
 int FlowMap::getValue(int x, int y) { return (*_readBuffer)[y][x]; }
 
 Vector FlowMap::getDir(int x, int y) {
+  if (x < 0 || x >= _width || y < 0 || y >= _height)
+    return Vector(0, 0);
   std::vector<Vector> directions = {
       Vector(0, -1), // N
       Vector(1, 0),  // E
@@ -85,7 +87,7 @@ void FlowMap::_update(int value, int x, int y) {
   _update(value + 2, x + 1, y + 1);
 }
 
-void FlowMap::updatePlayerVec(std::vector<Player const *> *playerVec) {
+void FlowMap::updatePlayerVec(std::vector<Player *> *playerVec) {
   std::lock_guard<std::mutex> guard(_playerMutex);
   _playerVec = playerVec;
 }

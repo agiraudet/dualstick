@@ -6,12 +6,14 @@
 #include <ctime>
 
 Entity::Entity(void)
-    : _id(0), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE), _hp(10) {
+    : _alive(true), _id(0), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE),
+      _hp(10), weapon(nullptr) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
 Entity::Entity(int id)
-    : _id(id), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE), _hp(10) {
+    : _alive(true), _id(id), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE),
+      _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
@@ -88,6 +90,22 @@ float Entity::getMaxSpeed(void) const { return _maxSpeed; }
 
 void Entity::capSpeed(void) { _velocity.capIntensity(_maxSpeed * _maxSpeed); }
 
+void Entity::setHp(int hp) {
+  _hp = hp;
+  if (_hp <= 0)
+    _alive = false;
+}
+
 int Entity::getHp(void) const { return _hp; }
 
-void Entity::injure(int damage) { _hp -= damage; }
+void Entity::injure(int damage) {
+  _hp -= damage;
+  if (_hp <= 0) {
+    _hp = 0;
+    _alive = false;
+  }
+}
+
+void Entity::setAlive(bool alive) { _alive = alive; }
+
+bool Entity::isAlive(void) const { return _alive; }
