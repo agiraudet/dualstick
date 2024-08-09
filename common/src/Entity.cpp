@@ -1,4 +1,6 @@
 #include "Entity.hpp"
+#include "Map.hpp"
+#include "Vector.hpp"
 #include <bits/types/time_t.h>
 #include <chrono>
 #include <cmath>
@@ -6,14 +8,14 @@
 #include <ctime>
 
 Entity::Entity(void)
-    : _alive(true), _id(0), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE),
-      _hp(10), weapon(nullptr) {
+    : weapon(nullptr), _alive(true), _id(-1), _maxSpeed(ENTITY_MAXSPEED),
+      _size(ENTITY_SIZE), _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
 Entity::Entity(int id)
-    : _alive(true), _id(id), _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE),
-      _hp(10) {
+    : weapon(nullptr), _alive(true), _id(id), _maxSpeed(ENTITY_MAXSPEED),
+      _size(ENTITY_SIZE), _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
@@ -21,9 +23,49 @@ Entity::~Entity(void) {}
 
 void Entity::setId(int id) { _id = id; }
 
+void Entity::setPos(Vector &pos) { _position = pos; }
+
+void Entity::setVel(Vector &vel) { _velocity = vel; }
+
+void Entity::setAngle(float angle) { _angle = angle; }
+
+void Entity::setMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
+
 void Entity::setLastUpdate(
     std::chrono::high_resolution_clock::time_point currentTime) {
   _lastMove = currentTime;
+}
+
+void Entity::setHp(int hp) {
+  _hp = hp;
+  if (_hp <= 0)
+    _alive = false;
+}
+
+void Entity::setAlive(bool alive) { _alive = alive; }
+
+int Entity::getId(void) const { return _id; }
+
+Vector const &Entity::getPos(void) const { return _position; }
+
+Vector const &Entity::getVel(void) const { return _velocity; }
+
+float Entity::getAngle(void) const { return _angle; }
+
+float Entity::getMaxSpeed(void) const { return _maxSpeed; }
+
+int Entity::getSize(void) const { return _size; };
+
+int Entity::getHp(void) const { return _hp; }
+
+bool Entity::isAlive(void) const { return _alive; }
+
+void Entity::update(Vector const &pos, Vector const &vel, float angle, int hp) {
+  _position = pos;
+  _velocity = vel;
+  _angle = angle;
+  _hp = hp;
+  _lastMove = std::chrono::high_resolution_clock::now();
 }
 
 void Entity::move(void) {
@@ -62,41 +104,13 @@ void Entity::move(Map &map) {
   _lastMove = currentTime;
 }
 
-int Entity::getId(void) const { return _id; }
-
-void Entity::setPos(Vector &pos) { _position = pos; }
-
-void Entity::setVel(Vector &vel) { _velocity = vel; }
-
-Vector const &Entity::getPos(void) const { return _position; }
-
-Vector const &Entity::getVel(void) const { return _velocity; }
-
-int Entity::getSize(void) const { return _size; };
-
-float Entity::getAngle(void) const { return _angle; }
-
-void Entity::setAngle(float angle) { _angle = angle; }
-
 void Entity::aimAngle(int targetX, int targetY) {
   float dx = targetX - _position.x;
   float dy = targetY - _position.y;
   _angle = std::atan2(dy, dx); //* (180.0f / M_PI);
 }
 
-void Entity::setMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
-
-float Entity::getMaxSpeed(void) const { return _maxSpeed; }
-
 void Entity::capSpeed(void) { _velocity.capIntensity(_maxSpeed * _maxSpeed); }
-
-void Entity::setHp(int hp) {
-  _hp = hp;
-  if (_hp <= 0)
-    _alive = false;
-}
-
-int Entity::getHp(void) const { return _hp; }
 
 void Entity::injure(int damage) {
   _hp -= damage;
@@ -105,7 +119,3 @@ void Entity::injure(int damage) {
     _alive = false;
   }
 }
-
-void Entity::setAlive(bool alive) { _alive = alive; }
-
-bool Entity::isAlive(void) const { return _alive; }

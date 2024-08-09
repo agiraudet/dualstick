@@ -10,7 +10,6 @@ CMN_SRCS_DIR    := $(CMN_DIR)/src
 CMN_SRCS        := Entity.cpp \
 									 Map.cpp \
 									 Mob.cpp \
-									 MobFactory.cpp \
 									 Player.cpp \
 									 Vector.cpp \
 									 Weapon.cpp
@@ -25,7 +24,7 @@ SRCS            := FlowMap.cpp \
 OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
 
 INC_FLAGS       := $(addprefix -I, $(INC_DIR))
-CXXFLAGS        := -MD -Wall -Wextra $(INC_FLAGS) -O3
+CXXFLAGS        := -MD -Wall -Wextra $(INC_FLAGS) -g
 CXX             := g++
 
 $(NAME): $(OBJS) $(CMN_OBJS)

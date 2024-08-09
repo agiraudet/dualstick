@@ -118,22 +118,10 @@ int Client::_handleReceive(ENetEvent &event, Engine &eng) {
     eng.receiveMsg(static_cast<MessagePlayerDisco *>(msgBody));
     break;
   }
-  case PLR_UPDATE: {
-    if (bodyLen < sizeof(MessagePlayerUpdate))
-      return -1;
-    eng.receiveMsg(static_cast<MessagePlayerUpdate *>(msgBody));
-    break;
-  }
   case PLR_ID: {
     if (bodyLen < sizeof(MessagePlayerID))
       return -1;
     eng.receiveMsg(static_cast<MessagePlayerID *>(msgBody));
-    break;
-  }
-  case MOB_UPDATE: {
-    if (bodyLen < sizeof(MessageMobUpdate))
-      return -1;
-    eng.receiveMsg(static_cast<MessageMobUpdate *>(msgBody));
     break;
   }
   case MOB_HIT: {

@@ -58,9 +58,8 @@ public:
   void generateMapTiles(Map const &map);
   void resize(int width, int height);
   void centerCamera(Entity const &entity);
-  void renderFrame(Player const &player,
-                   std::unordered_map<int, Player> const &otherPlayers,
-                   std::unordered_map<int, std::shared_ptr<Mob>> const &mobs);
+  void renderFrame(int playerId, EntityManager<Player> &EMPlayer,
+                   EntityManager<Mob> &EMMob);
   int getCamX(void) const;
   int getCamY(void) const;
   Anim &addEntityFx(Entity &entity, DMAnim anim, float offset = 0.f,

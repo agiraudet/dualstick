@@ -155,6 +155,8 @@ void Listener::_handleConnect(ENetEvent &event, Server &serv) {
   _peers[newPeerId] = event.peer;
   std::cout << "[Listener] New connection: ";
   printAddress(event.peer->address);
+  std::cout << "[Listener] New player got assigned id: " << newPeerId
+            << std::endl;
   MessagePlayerID msgId = {newPeerId};
   ENetPacket *packetId = packageMessage(msgId, PLR_ID, true);
   msgOutAdd(newPeerId, packetId, SINGLE);
@@ -186,28 +188,28 @@ void Listener::_handleRecv(ENetEvent &event, Server &serv) {
   switch (msgHeader->type) {
   case PLR_UPDATE: {
     if (event.packet->dataLength !=
-        sizeof(MessageHeader) + sizeof(MessagePlayerUpdate)) {
+        sizeof(MessageHeader) + sizeof(MessageEntityUpdate)) {
       std::cerr << "Received PLR_UPDATE packet with invalid length"
                 << std::endl;
       break;
     }
-    MessagePlayerUpdate *msgUpdate =
-        (MessagePlayerUpdate *)(event.packet->data + sizeof(MessageHeader));
+    MessageEntityUpdate *msgUpdate =
+        (MessageEntityUpdate *)(event.packet->data + sizeof(MessageHeader));
     serv.playerUpdate(msgUpdate->id, msgUpdate->pos, msgUpdate->vel,
                       msgUpdate->angle);
     break;
   }
   case PLR_SHOOT: {
     if (event.packet->dataLength !=
-        sizeof(MessageHeader) + sizeof(MessagePlayerUpdate)) {
+        sizeof(MessageHeader) + sizeof(MessagePlayerShoot)) {
       std::cerr << "Received PLR_SHOOT packet with invalid length" << std::endl;
       break;
     }
-    MessagePlayerUpdate *msgUpdate =
-        (MessagePlayerUpdate *)(event.packet->data + sizeof(MessageHeader));
-    serv.playerUpdate(msgUpdate->id, msgUpdate->pos, msgUpdate->vel,
-                      msgUpdate->angle);
-    serv.playerShoot(msgUpdate->id);
+    MessagePlayerShoot *msgShoot =
+        (MessagePlayerShoot *)(event.packet->data + sizeof(MessageHeader));
+    serv.playerUpdate(msgShoot->id, msgShoot->pos, msgShoot->vel,
+                      msgShoot->angle);
+    serv.playerShoot(msgShoot->id);
     break;
   }
   default:

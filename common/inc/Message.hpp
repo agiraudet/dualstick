@@ -42,14 +42,6 @@ struct MessagePlayerDisco {
   int id;
 };
 
-struct MessagePlayerUpdate {
-  int id;
-  float angle;
-  Vector pos;
-  Vector vel;
-  int hp;
-};
-
 struct MessagePlayerID {
   int id;
 };
@@ -60,14 +52,6 @@ struct MessagePlayerDead {
 
 struct MessagePlayerShoot {
   int id;
-  float angle;
-  Vector pos;
-  Vector vel;
-};
-
-struct MessageMobUpdate {
-  int id;
-  mobType type;
   float angle;
   Vector pos;
   Vector vel;
@@ -84,12 +68,19 @@ struct MessageMobAttack {
   int playerId;
 };
 
+struct MessageEntityUpdate {
+  int id;
+  float angle;
+  Vector pos;
+  Vector vel;
+  int hp;
+};
+
 struct MessageGameState {
   uint32_t stamp;
   int nplayer;
-  MessagePlayerUpdate players[MAX_N_PLAYER];
   int nmob;
-  MessageMobUpdate mob[MAX_N_MOB];
+  MessageEntityUpdate entity[MAX_N_PLAYER + MAX_N_MOB];
 };
 
 struct MessageMap {

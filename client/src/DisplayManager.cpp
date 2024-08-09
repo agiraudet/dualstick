@@ -1,5 +1,6 @@
 #include "DisplayManager.hpp"
 #include "Entity.hpp"
+#include "Map.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
@@ -119,23 +120,26 @@ Anim &DisplayManager::addStaticFx(DMAnim anim, int x, int y) {
   return _fxStatic.back().anim;
 }
 
-void DisplayManager::renderFrame(
-    Player const &player, std::unordered_map<int, Player> const &otherPlayers,
-    std::unordered_map<int, std::shared_ptr<Mob>> const &mobs) {
+void DisplayManager::renderFrame(int playerId, EntityManager<Player> &EMPlayer,
+                                 EntityManager<Mob> &EMMob) {
   SDL_SetRenderDrawColor(_renderer, 63, 56, 81, 255);
   SDL_RenderClear(_renderer);
   _renderMap();
-  for (auto const &o : otherPlayers)
-    _renderEntity(o.second, PLR_OTHER);
-  if (player.isAlive())
-    _renderEntity(player, PLR_MAIN);
-  for (auto &m : mobs)
-    _renderEntity(*m.second, MOB);
+  for (auto const &[id, plr] : EMPlayer) {
+    if (id != playerId && plr->isAlive())
+      _renderEntity(*plr, PLR_OTHER);
+  }
+  auto player = EMPlayer.get(playerId);
+  if (player && player->isAlive())
+    _renderEntity(*player, PLR_MAIN);
+  for (auto const &[id, mob] : EMMob)
+    _renderEntity(*mob, MOB);
   for (auto &fx : _fxStatic)
     fx.render(_camera);
   for (auto &fx : _fxEntity)
     fx.render(_camera);
-  _updateGuiText(player);
+  if (player)
+    _updateGuiText(*player);
   for (auto &txt : _guiTexts)
     txt.second.draw();
   SDL_RenderPresent(_renderer);

@@ -1,11 +1,10 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "Entity.hpp"
 #include "Message.hpp"
 
 class Player;
@@ -36,8 +35,7 @@ public:
   bool pointIsColliding(int x, int y) const;
   bool boxIsColliding(int x, int y, int w, int h) const;
   bool checkCollision(int tileIndex) const;
-  int rayCast(Player &shooter,
-              std::unordered_map<int, std::shared_ptr<Mob>> &shooty, int &hitX,
+  int rayCast(Player &shooter, EntityManager<Mob> &shooties, int &hitX,
               int &hitY);
 
 protected:

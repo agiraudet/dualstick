@@ -1,26 +1,26 @@
 #ifndef MOB_HPP
 #define MOB_HPP
 
-#include "Message.hpp"
+#include "Entity.hpp"
 #include "Player.hpp"
 #include "Vector.hpp"
 
 class Mob : public Entity {
-  static int count;
 
 public:
   Mob(void);
-  void setType(mobType type);
-  mobType getType(void) const;
+  Mob(int id);
+  ~Mob(void);
+
   Vector const &getTarget(void) const;
-  Player *findClosest(std::vector<Player *> &playerVec);
+  std::shared_ptr<Player> findClosest(EntityManager<Player> const &EMPlayer);
   inline int getTileX(void) const { return _position.x / 32; }
   inline int getTileY(void) const { return _position.y / 32; }
 
 private:
-  mobType _type;
-  int _tileX;
-  int _tileY;
+  void _initWeapon(void);
+
+private:
   Vector _target;
 };
 

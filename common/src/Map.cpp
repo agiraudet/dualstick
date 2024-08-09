@@ -1,4 +1,5 @@
 #include "Map.hpp"
+#include "Entity.hpp"
 #include "Message.hpp"
 #include "Mob.hpp"
 #include "Player.hpp"
@@ -174,9 +175,8 @@ bool Map::checkCollision(int tileIndex) const {
     return false;
   return true;
 }
-int Map::rayCast(Player &shooter,
-                 std::unordered_map<int, std::shared_ptr<Mob>> &shooty,
-                 int &hitX, int &hitY) {
+int Map::rayCast(Player &shooter, EntityManager<Mob> &shooties, int &hitX,
+                 int &hitY) {
   if (shooter.weapon->fire()) {
     const double rayInc = 1;
     const double maxDist = shooter.weapon->range;
@@ -185,14 +185,14 @@ int Map::rayCast(Player &shooter,
     for (double t = 0; t < maxDist; t += rayInc) {
       ray.x = shooter.getPos().x + t * cos(angle);
       ray.y = shooter.getPos().y + t * sin(angle);
-      if (shooty.empty())
+      if (shooties.empty())
         return -1;
-      for (auto &e : shooty) {
-        if (ray.distance(e.second->getPos()) <= e.second->getSize()) {
-          shooter.weapon->dealDamage(*e.second, t);
+      for (auto &[id, mob] : shooties) {
+        if (ray.distance(mob->getPos()) <= mob->getSize()) {
+          shooter.weapon->dealDamage(*mob, t);
           hitX = ray.x;
           hitY = ray.y;
-          return e.first;
+          return id;
         } else if (pointIsColliding(ray.x, ray.y)) {
           return -1;
         }

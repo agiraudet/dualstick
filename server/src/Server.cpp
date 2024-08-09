@@ -9,13 +9,10 @@
 #include <stdexcept>
 #include <thread>
 
-#include "Entity.hpp"
-#include "Listener.hpp"
-#include "Message.hpp"
+#include "Mob.hpp"
 #include "Player.hpp"
 #include "Server.hpp"
 #include "Vector.hpp"
-#include "Weapon.hpp"
 
 Server *g_serverInstance = nullptr;
 
@@ -50,10 +47,13 @@ void Server::_loadMap(std::string const &path) {
 int Server::loadGame(std::string const &mapFile) {
   _loadMap(mapFile);
   _flow.init();
+
   Vector pos(64 + 16, 128 + 16);
-  _hive.createMob(BASIC, pos);
+  /*_hive.createMob(BASIC, pos);*/
   Vector pos2(32 * 22, 32 * 24);
-  _hive.createMob(BASIC, pos2);
+  /*_hive.createMob(BASIC, pos2);*/
+  _EMMob.get(_EMMob.create())->setPos(pos);
+  _EMMob.get(_EMMob.create())->setPos(pos2);
   return 0;
 }
 
@@ -92,28 +92,31 @@ void Server::_run() {
 }
 
 void Server::_updateGameState(void) {
-  _hive.removeDeadMobs();
-  for (const auto &p : _hive.getMobs()) {
-    const auto &mob = p.second;
-    Player *target = mob->findClosest(_playersPtr);
-    Vector const &pos = mob->getPos();
-    Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
-    aim.x = (mob->getTileX() + aim.x) * _map.getTileSize() +
-            (float)_map.getTileSize() / 2;
-    aim.y = (mob->getTileY() + aim.y) * _map.getTileSize() +
-            (float)_map.getTileSize() / 2;
-    Vector dir = aim - pos;
-    dir = dir.normalize();
-    dir = dir * ENTITY_MAXSPEED;
-    mob->setVel(dir);
-    mob->capSpeed();
-    mob->move();
-    if (target && mob->weapon) {
-      if (mob->getPos().distance(target->getPos()) < mob->weapon->range &&
-          mob->weapon->fire()) {
-        mob->weapon->dealDamage(*target, 0.f);
-        MessageMobAttack msg = {mob->getId(), target->getId()};
-        _listener.msgOutAdd(-1, packageMessage(msg, MOB_ATTACK, true), ALL);
+  _EMMob.removeDeads();
+  if (!_EMPlayer.empty()) {
+    for (auto &[id, mob] : _EMMob) {
+      auto target = mob->findClosest(_EMPlayer);
+      printf("%d -> %d\n", id, target ? target->getId() : -99);
+      Vector const &pos = mob->getPos();
+      Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
+      std::cout << aim << std::endl;
+      aim.x = (mob->getTileX() + aim.x) * _map.getTileSize() +
+              (float)_map.getTileSize() / 2;
+      aim.y = (mob->getTileY() + aim.y) * _map.getTileSize() +
+              (float)_map.getTileSize() / 2;
+      Vector dir = aim - pos;
+      dir = dir.normalize();
+      dir = dir * ENTITY_MAXSPEED;
+      mob->setVel(dir);
+      mob->capSpeed();
+      mob->move();
+      if (target && mob->weapon) {
+        if (mob->getPos().distance(target->getPos()) < mob->weapon->range &&
+            mob->weapon->fire()) {
+          mob->weapon->dealDamage(*target, 0.f);
+          MessageMobAttack msg = {id, target->getId()};
+          _listener.msgOutAdd(-1, packageMessage(msg, MOB_ATTACK, true), ALL);
+        }
       }
     }
   }
@@ -129,68 +132,50 @@ void Server::_sendMap(int id) {
   std::vector<MessageMap> const &msgMap = _map.getMsg();
   for (auto const &msg : msgMap) {
     ENetPacket *packet = packageMessage(msg, MAP, true);
-    printf("Snd map packet %d/%d\n", msg.idPack + 1, msg.nPack);
+    printf("[Map] Sent packet %d/%d\n", msg.idPack + 1, msg.nPack);
     _listener.msgOutAdd(id, packet, SINGLE);
   }
 }
 
 void Server::_craftMsgGameState(void) {
-  _msgGameState.nplayer = _players.size();
   static uint32_t stamp = 0;
-  int i = 0;
   _msgGameState.stamp = stamp++;
-  for (const auto &u : _players) {
-    if (i >= MAX_N_PLAYER) {
-      std::cout << _msgGameState.nplayer << ": too much players !" << std::endl;
-      break;
-    }
-    _msgGameState.players[i].angle = u.second.getAngle();
-    _msgGameState.players[i].vel = u.second.getVel();
-    _msgGameState.players[i].pos = u.second.getPos();
-    _msgGameState.players[i].id = u.second.getId();
-    _msgGameState.players[i].hp = u.second.getHp();
-    i++;
-  }
-  _hive.craftMobMsgState(_msgGameState);
+  int nPlayer = MAX_N_PLAYER;
+  _EMPlayer.fillMsg(nPlayer, _msgGameState.entity);
+  _msgGameState.nplayer = nPlayer;
+  int nMob = MAX_N_PLAYER + MAX_N_MOB - nPlayer;
+  _EMMob.fillMsg(nMob, &_msgGameState.entity[nPlayer]);
+  _msgGameState.nmob = nMob;
+  printf("%d %d\n", nPlayer, nMob);
 }
 
-void Server::_refreshPlayerPtr(void) {
-  _playersPtr.clear();
-  for (auto &p : _players)
-    _playersPtr.push_back(&p.second);
-  _flow.updatePlayerVec(&_playersPtr);
+int Server::playerAdd(void) {
+  int newPlayerId = _EMPlayer.create();
+  _sendMap(newPlayerId);
+  return newPlayerId;
 }
 
-void Server::playerAdd(int id) {
-  _players[id] = Player();
-  _players[id].setId(id);
+int Server::playerAdd(int id) {
+  Vector pos(64, 64);
+  _EMPlayer.create(id)->setPos(pos);
   _sendMap(id);
-  _refreshPlayerPtr();
+  return id;
 }
 
-void Server::playerRemove(int id) {
-  auto it = _players.find(id);
-  if (it != _players.end()) {
-    _players.erase(it);
-    _refreshPlayerPtr();
-  }
-}
+void Server::playerRemove(int id) { _EMPlayer.remove(id); }
 
 void Server::playerUpdate(int id, Vector &pos, Vector &vel, float angle) {
-  auto it = _players.find(id);
-  if (it != _players.end()) {
-    it->second.setPos(pos);
-    it->second.setVel(vel);
-    it->second.setAngle(angle);
-  }
+  auto player = _EMPlayer.get(id);
+  if (player)
+    player->update(pos, vel, angle, player->getHp());
 }
 
 void Server::playerShoot(int id) {
-  auto it = _players.find(id);
-  if (it != _players.end()) {
+  auto player = _EMPlayer.get(id);
+  if (player) {
     int hitX = 0;
     int hitY = 0;
-    int hit = _map.rayCast(it->second, _hive.getMobs(), hitX, hitY);
+    int hit = _map.rayCast(*player, _EMMob, hitX, hitY);
     if (hit != -1) {
       MessageMobHit msg = {hit, hitX, hitY};
       _listener.msgOutAdd(id, packageMessage(msg, MOB_HIT, true), ALL);

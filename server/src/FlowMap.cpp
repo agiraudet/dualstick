@@ -12,7 +12,7 @@ FlowMap::~FlowMap(void) {}
 void FlowMap::init(void) {
   int mapSize = _map.getSize();
   _dataA.resize(mapSize);
-  for (size_t i = 0; i < mapSize; ++i) {
+  for (int i = 0; i < mapSize; ++i) {
     _dataA[i].resize(_map.getRowSize(i), INT_MAX);
   }
   _width = _dataA[0].size();

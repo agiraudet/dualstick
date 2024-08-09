@@ -10,7 +10,6 @@ CMN_SRCS_DIR    := $(CMN_DIR)/src
 CMN_SRCS        := Entity.cpp \
 									 Map.cpp \
 									 Mob.cpp \
-									 MobFactory.cpp \
 									 Player.cpp \
 									 Vector.cpp \
 									 Weapon.cpp

@@ -6,13 +6,12 @@
 #include <ctime>
 
 Player::Player(void) : Entity() {
-  _alive = true;
   _resetInputs();
   weapon = new Weapon();
 }
 
-Player::Player(int id) : Entity(id) {
-  _alive = true;
+Player::Player(int id) : Entity() {
+  _id = id;
   _resetInputs();
   weapon = new Weapon();
 }

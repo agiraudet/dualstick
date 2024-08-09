@@ -1,11 +1,11 @@
 #include "Engine.hpp"
 #include "DisplayManager.hpp"
+#include "Entity.hpp"
 #include "Message.hpp"
 #include "Timer.hpp"
 #include "Vector.hpp"
 
 #include <SDL2/SDL.h>
-#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -19,8 +19,7 @@ Engine::Engine(void)
     : _client(Client()), _state(LOADING),
       _msgPlayerUpdate({-1, 0.f, Vector(-99, -99), Vector(-99, -99), 10}) {
   _map = new Map();
-  Vector initPos(64.f, 64.f);
-  _player.setPos(initPos);
+  _player = nullptr;
 }
 
 Engine::~Engine(void) {}
@@ -41,23 +40,26 @@ void Engine::run(void) {
     _client.getEvent(*this);
     _getEvent();
     if (_state == RUNNING) {
-      for (auto &p : _otherPlayers) {
-        p.second.move();
+      for (auto &[id, player] : _EMPlayers) {
+        if (id != _player->getId())
+          player->move();
       }
-      for (auto &m : _hive.getMobs()) {
-        m.second->move();
+      printf("[%d] ", _EMMobs.size());
+      for (auto &[id, mob] : _EMMobs) {
+        printf("%d ", id);
+        mob->move();
       }
-      if (_player.isAlive()) {
-        _player.applyInput();
-        _player.move(*_map);
-        _dm.centerCamera(_player);
+      printf("\n");
+      if (_player && _player->isAlive()) {
+        _player->applyInput();
+        _player->move(*_map);
+        _dm.centerCamera(*_player);
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
-        _player.aimAngle(mouseX + _dm.getCamX(), mouseY + _dm.getCamY());
+        _player->aimAngle(mouseX + _dm.getCamX(), mouseY + _dm.getCamY());
         _NotifyPlayerUpdate();
       }
-      _dm.renderFrame(_player, _otherPlayers, _hive.getMobs());
-      printf("%d\n", _player.getHp());
+      _dm.renderFrame(_player->getId(), _EMPlayers, _EMMobs);
     }
     fpsTimer.capFps();
   }
@@ -68,8 +70,10 @@ void Engine::_getEvent(void) {
   while (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT)
       _state = STOPPED;
-    else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
-      _processInput(e.key.keysym.sym, (e.type == SDL_KEYDOWN));
+    else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+      if (_player)
+        _processInput(e.key.keysym.sym, (e.type == SDL_KEYDOWN));
+    }
   }
 }
 
@@ -77,125 +81,102 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
   switch (sym) {
   case SDLK_w:
   case SDLK_UP:
-    _player.setInput(UP, state);
+    _player->setInput(UP, state);
     break;
   case SDLK_s:
   case SDLK_DOWN:
-    _player.setInput(DOWN, state);
+    _player->setInput(DOWN, state);
     break;
   case SDLK_a:
   case SDLK_LEFT:
-    _player.setInput(LEFT, state);
+    _player->setInput(LEFT, state);
     break;
   case SDLK_d:
   case SDLK_RIGHT:
-    _player.setInput(RIGHT, state);
+    _player->setInput(RIGHT, state);
     break;
   case SDLK_SPACE:
-    if (_player.weapon->fire()) {
+    if (_player->weapon->fire()) {
       ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
-      std::cout << "pew" << std::endl;
       _client.sendMessage(pck);
-      _dm.addEntityFx(_player, SHOOT, _player.getSize() * 0.75, 90.f).start();
+      _dm.addEntityFx(*_player, SHOOT, _player->getSize() * 0.75, 90.f).start();
     }
     break;
   case SDLK_r:
-    _player.weapon->reload();
+    _player->weapon->reload();
     break;
   case SDLK_F1:
-    std::cout << _player.getPos() << std::endl;
+    std::cout << _player->getPos() << std::endl;
     break;
   }
 }
 
 void Engine::_NotifyPlayerUpdate(void) {
-  Vector const &plrPos = _player.getPos();
-  Vector const &plrVel = _player.getVel();
-  float plrAngle = _player.getAngle();
-  _msgPlayerUpdate.id = _player.getId();
+  Vector const &plrPos = _player->getPos();
+  Vector const &plrVel = _player->getVel();
+  float plrAngle = _player->getAngle();
+  _msgPlayerUpdate.id = _player->getId();
   if (_msgPlayerUpdate.angle != plrAngle || _msgPlayerUpdate.pos != plrPos ||
       _msgPlayerUpdate.vel != plrVel) {
     _msgPlayerUpdate.angle = plrAngle;
     _msgPlayerUpdate.pos = plrPos;
     _msgPlayerUpdate.vel = plrVel;
-    _msgPlayerUpdate.hp = _player.getHp();
+    _msgPlayerUpdate.hp = _player->getHp();
     ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_UPDATE, true);
     _client.sendMessage(pck);
   }
 }
 
-void Engine::_removePlayer(int id) {
-  if (_otherPlayers.find(id) != _otherPlayers.end()) {
-    _otherPlayers.erase(id);
-  }
-}
+void Engine::_removePlayer(int id) { _EMPlayers.remove(id); }
 
-void Engine::_addPlayer(int id) {
-  if (_otherPlayers.find(id) != _otherPlayers.end()) {
-    _otherPlayers.erase(id);
-  }
-  _otherPlayers[id] = Player(id);
-}
+void Engine::_addPlayer(int id) { _EMPlayers.create(id); }
 
 void Engine::_updatePlayer(int id, Vector &pos, Vector &vel, float angle,
                            int hp) {
-  if (id == _player.getId()) {
-    _player.setHp(hp);
-    return;
-  }
-  std::unordered_map<int, Player>::iterator it = _otherPlayers.find(id);
-  if (it == _otherPlayers.end())
-    _addPlayer(id);
-  _otherPlayers[id].setPos(pos);
-  _otherPlayers[id].setVel(vel);
-  _otherPlayers[id].setAngle(angle);
-  _otherPlayers[id].setLastUpdate(std::chrono::high_resolution_clock::now());
-  _otherPlayers[id].setHp(hp);
+  _EMPlayers.get(id)->update(pos, vel, angle, hp);
 }
 
-void Engine::receiveMsg(MessagePlayerCo *msg) {
-  if (msg->id != _player.getId())
-    _addPlayer(msg->id);
+void Engine::_updateEntity(std::shared_ptr<Entity> entity,
+                           MessageEntityUpdate &msg) {
+  if (!entity)
+    return;
+  entity->update(msg.pos, msg.vel, msg.angle, msg.hp);
 }
+void Engine::_debugUpdateEntity(std::shared_ptr<Entity> entity,
+                                MessageEntityUpdate &msg) {
+  if (!entity)
+    return;
+  entity->setHp(msg.hp);
+}
+
+void Engine::receiveMsg(MessagePlayerCo *msg) { _addPlayer(msg->id); }
 
 void Engine::receiveMsg(MessagePlayerDisco *msg) { _removePlayer(msg->id); }
 
-void Engine::receiveMsg(MessagePlayerUpdate *msg) {
-  _updatePlayer(msg->id, msg->pos, msg->vel, msg->angle, msg->hp);
-}
-
 void Engine::receiveMsg(MessagePlayerID *msg) {
-  _player.setId(msg->id);
+  // ID should not create a player...
   printf("[Player] Got assigned id: %d\n", msg->id);
+  _player = _EMPlayers.create(msg->id);
+  Vector pos(64, 64);
+  _player->setPos(pos);
 }
 
 void Engine::receiveMsg(MessagePlayerDead *msg) {
-  if (msg->id == _player.getId())
-    _player.setAlive(false);
-  else
-    _removePlayer(msg->id);
-}
-
-void Engine::receiveMsg(MessageMobUpdate *msg) {
-  _hive.updateMob(msg->id, msg->type, msg->pos, msg->vel, msg->angle);
+  _EMPlayers.get(msg->id)->setAlive(false);
 }
 
 void Engine::receiveMsg(MessageMobHit *msg) {
-  auto mob = _hive.getMobById(msg->id);
+  auto mob = _EMMobs.get(msg->id);
   if (mob)
-    _dm.addStaticFx(DAMAGE, mob->getPos().x - mob->getSize() / 2,
-                    mob->getPos().y - mob->getSize() / 2)
+    _dm.addStaticFx(DAMAGE, mob->getPos().x - (float)mob->getSize() / 2,
+                    mob->getPos().y - (float)mob->getSize() / 2)
         .start();
 }
 
 void Engine::receiveMsg(MessageMobAttack *msg) {
-  if (msg->playerId == _player.getId())
-    _dm.addEntityFx(_player, MOB_ATCK, _player.getSize() / 2).start();
-  else {
-    auto it = _otherPlayers.find(msg->playerId);
-    if (it != _otherPlayers.end())
-      _dm.addEntityFx(it->second, MOB_ATCK, it->second.getSize() / 2).start();
-  }
+  auto player = _EMPlayers.get(msg->playerId);
+  if (player)
+    _dm.addEntityFx(*player, MOB_ATCK, (float)player->getSize() / 2).start();
 }
 
 void Engine::receiveMsg(MessageGameState *msg) {
@@ -203,12 +184,20 @@ void Engine::receiveMsg(MessageGameState *msg) {
   if (msg->stamp <= lastStamp)
     return;
   lastStamp = msg->stamp;
-  for (int i = 0; i < msg->nplayer && i < MAX_N_PLAYER; i++)
-    receiveMsg(&msg->players[i]);
-  if (msg->nmob < _hive.getMobs().size())
-    _hive.removeAbsentMobs(msg->mob, msg->nmob);
-  for (int i = 0; i < msg->nmob && i < MAX_N_MOB; i++)
-    receiveMsg(&msg->mob[i]);
+  int i = 0;
+  printf("MSG\n");
+  printf("%d %d\n", msg->nplayer, msg->nmob);
+  for (; i < msg->nplayer; i++) {
+    printf("player id %d\n", msg->entity[i].id);
+    if (_player && msg->entity[i].id == _player->getId())
+      _debugUpdateEntity(_EMPlayers.create(msg->entity[i].id), msg->entity[i]);
+    else
+      _updateEntity(_EMPlayers.create(msg->entity[i].id), msg->entity[i]);
+  }
+  for (; i < msg->nplayer + msg->nmob; i++) {
+    printf("mob id %d\n", msg->entity[i].id);
+    _updateEntity(_EMMobs.create(msg->entity[i].id), msg->entity[i]);
+  }
 }
 
 void Engine::receiveMsg(MessageMap *msg) {
