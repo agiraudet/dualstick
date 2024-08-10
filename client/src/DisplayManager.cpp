@@ -52,8 +52,8 @@ void DM_StaticFx::render(SDL_Rect const &camera) {
 DisplayManager::DisplayManager(void)
     : _width(0), _height(0), _window(nullptr), _renderer(nullptr),
       _camera({0, 0, 0, 0}) {
-  /*resize(640 * 2, 480 * 2);*/
-  resize(640, 480);
+  resize(640 * 2, 480 * 2);
+  /*resize(640, 480);*/
   SDL_Init(SDL_INIT_VIDEO);
   TTF_Init();
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,

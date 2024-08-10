@@ -6,6 +6,7 @@
 #include <thread>
 #include <vector>
 
+#include "Entity.hpp"
 #include "Map.hpp"
 #include "Player.hpp"
 
@@ -23,7 +24,7 @@ public:
   Vector getDir(int x, int y);
   void startUpdating(void);
   void stopUpdating(void);
-  void updatePlayerVec(std::vector<Player *> *playerVec);
+  void updatePlayerVec(EntityManager<Player> EMPlayer);
 
 private:
   void _update(int value, int x, int y);
@@ -34,7 +35,7 @@ private:
   Map const &_map;
   std::vector<std::vector<int>> _dataA;
   std::vector<std::vector<int>> _dataB;
-  std::vector<Player *> *_playerVec;
+  std::vector<Vector> _playerVec;
   std::atomic<std::vector<std::vector<int>> *> _readBuffer;
   std::atomic<std::vector<std::vector<int>> *> _writeBuffer;
   int _width;
@@ -42,6 +43,7 @@ private:
 
 private:
   std::mutex _playerMutex;
+  std::mutex _dataMutex;
   std::thread _updateThread;
   std::atomic<bool> _running;
 };

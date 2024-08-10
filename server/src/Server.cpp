@@ -49,11 +49,11 @@ int Server::loadGame(std::string const &mapFile) {
   _flow.init();
 
   Vector pos(64 + 16, 128 + 16);
-  /*_hive.createMob(BASIC, pos);*/
   Vector pos2(32 * 22, 32 * 24);
-  /*_hive.createMob(BASIC, pos2);*/
-  _EMMob.get(_EMMob.create())->setPos(pos);
+  Vector pos3(32 * 7, 32 * 7);
+  _EMMob.get(_EMMob.create())->setPos(pos3);
   _EMMob.get(_EMMob.create())->setPos(pos2);
+  _EMMob.get(_EMMob.create())->setPos(pos);
   return 0;
 }
 
@@ -92,23 +92,25 @@ void Server::_run() {
 }
 
 void Server::_updateGameState(void) {
+  /*std::this_thread::sleep_for(std::chrono::duration<double,
+   * std::milli>(1000));*/
   _EMMob.removeDeads();
   if (!_EMPlayer.empty()) {
     for (auto &[id, mob] : _EMMob) {
       auto target = mob->findClosest(_EMPlayer);
-      printf("%d -> %d\n", id, target ? target->getId() : -99);
       Vector const &pos = mob->getPos();
       Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
-      std::cout << aim << std::endl;
+      if (aim == Vector(0, 0))
+        continue;
       aim.x = (mob->getTileX() + aim.x) * _map.getTileSize() +
               (float)_map.getTileSize() / 2;
       aim.y = (mob->getTileY() + aim.y) * _map.getTileSize() +
               (float)_map.getTileSize() / 2;
       Vector dir = aim - pos;
       dir = dir.normalize();
-      dir = dir * ENTITY_MAXSPEED;
+      dir = dir * 80;
       mob->setVel(dir);
-      mob->capSpeed();
+      /*mob->capSpeed();*/
       mob->move();
       if (target && mob->weapon) {
         if (mob->getPos().distance(target->getPos()) < mob->weapon->range &&
@@ -119,6 +121,7 @@ void Server::_updateGameState(void) {
         }
       }
     }
+    _flow.updatePlayerVec(_EMPlayer);
   }
 }
 
@@ -146,7 +149,6 @@ void Server::_craftMsgGameState(void) {
   int nMob = MAX_N_PLAYER + MAX_N_MOB - nPlayer;
   _EMMob.fillMsg(nMob, &_msgGameState.entity[nPlayer]);
   _msgGameState.nmob = nMob;
-  printf("%d %d\n", nPlayer, nMob);
 }
 
 int Server::playerAdd(void) {

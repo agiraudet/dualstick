@@ -44,12 +44,9 @@ void Engine::run(void) {
         if (id != _player->getId())
           player->move();
       }
-      printf("[%d] ", _EMMobs.size());
-      for (auto &[id, mob] : _EMMobs) {
-        printf("%d ", id);
-        mob->move();
-      }
-      printf("\n");
+      /*for (auto &[id, mob] : _EMMobs) {*/
+      /*  mob->move();*/
+      /*}*/
       if (_player && _player->isAlive()) {
         _player->applyInput();
         _player->move(*_map);
@@ -185,17 +182,13 @@ void Engine::receiveMsg(MessageGameState *msg) {
     return;
   lastStamp = msg->stamp;
   int i = 0;
-  printf("MSG\n");
-  printf("%d %d\n", msg->nplayer, msg->nmob);
   for (; i < msg->nplayer; i++) {
-    printf("player id %d\n", msg->entity[i].id);
     if (_player && msg->entity[i].id == _player->getId())
       _debugUpdateEntity(_EMPlayers.create(msg->entity[i].id), msg->entity[i]);
     else
       _updateEntity(_EMPlayers.create(msg->entity[i].id), msg->entity[i]);
   }
   for (; i < msg->nplayer + msg->nmob; i++) {
-    printf("mob id %d\n", msg->entity[i].id);
     _updateEntity(_EMMobs.create(msg->entity[i].id), msg->entity[i]);
   }
 }

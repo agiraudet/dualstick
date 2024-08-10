@@ -1,11 +1,11 @@
 #include "FlowMap.hpp"
+#include "Entity.hpp"
 #include <chrono>
 #include <climits>
 #include <iomanip>
 #include <mutex>
 
-FlowMap::FlowMap(Map const &map)
-    : _map(map), _playerVec(nullptr), _running(false) {}
+FlowMap::FlowMap(Map const &map) : _map(map), _running(false) {}
 
 FlowMap::~FlowMap(void) {}
 
@@ -28,11 +28,15 @@ void FlowMap::reset(void) {
   }
 }
 
-int FlowMap::getValue(int x, int y) { return (*_readBuffer)[y][x]; }
+int FlowMap::getValue(int x, int y) {
+  std::lock_guard<std::mutex> guard(_dataMutex);
+  return (*_readBuffer)[y][x];
+}
 
 Vector FlowMap::getDir(int x, int y) {
   if (x < 0 || x >= _width || y < 0 || y >= _height)
     return Vector(0, 0);
+  std::lock_guard<std::mutex> guard(_dataMutex);
   std::vector<Vector> directions = {
       Vector(0, -1), // N
       Vector(1, 0),  // E
@@ -87,9 +91,12 @@ void FlowMap::_update(int value, int x, int y) {
   _update(value + 2, x + 1, y + 1);
 }
 
-void FlowMap::updatePlayerVec(std::vector<Player *> *playerVec) {
+void FlowMap::updatePlayerVec(EntityManager<Player> EMPlayer) {
   std::lock_guard<std::mutex> guard(_playerMutex);
-  _playerVec = playerVec;
+  _playerVec.clear();
+  for (auto const &[id, player] : EMPlayer) {
+    _playerVec.push_back(player->getPos());
+  }
 }
 
 void FlowMap::startUpdating(void) {
@@ -113,10 +120,9 @@ void FlowMap::_updateLoop() {
     {
       {
         std::lock_guard<std::mutex> plrGuard(_playerMutex);
-        if (_playerVec) {
+        if (!_playerVec.empty()) {
           reset();
-          for (auto p : *_playerVec) {
-            Vector const &pos = p->getPos();
+          for (auto pos : _playerVec) {
             refresh(pos.x / _map.getTileSize(), pos.y / _map.getTileSize());
           }
         }
@@ -128,6 +134,7 @@ void FlowMap::_updateLoop() {
 }
 
 void FlowMap::_swapBuffers(void) {
+  std::lock_guard<std::mutex> guard(_dataMutex);
   auto tmp = _writeBuffer.load();
   _writeBuffer.store(_readBuffer);
   _readBuffer.store(tmp);

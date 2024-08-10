@@ -160,6 +160,6 @@ Vector &Vector::max(Vector &a, Vector &b) {
 
 // Output stream operator
 std::ostream &operator<<(std::ostream &o, Vector const &v) {
-  o << "Vector(" << v.getX() << ", " << v.getY() << ")";
+  o << "(" << v.getX() << ", " << v.getY() << ")";
   return o;
 }

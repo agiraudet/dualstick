@@ -8,14 +8,14 @@
 #include <ctime>
 
 Entity::Entity(void)
-    : weapon(nullptr), _alive(true), _id(-1), _maxSpeed(ENTITY_MAXSPEED),
-      _size(ENTITY_SIZE), _hp(10) {
+    : weapon(nullptr), _alive(true), _id(-1), _position(0, 0), _velocity(0, 0),
+      _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE), _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
 Entity::Entity(int id)
-    : weapon(nullptr), _alive(true), _id(id), _maxSpeed(ENTITY_MAXSPEED),
-      _size(ENTITY_SIZE), _hp(10) {
+    : weapon(nullptr), _alive(true), _id(id), _position(0, 0), _velocity(0, 0),
+      _maxSpeed(ENTITY_MAXSPEED), _size(ENTITY_SIZE), _hp(10) {
   _lastMove = std::chrono::high_resolution_clock::now();
 }
 
