@@ -1,11 +1,14 @@
 #include "DisplayManager.hpp"
 #include "Entity.hpp"
 #include "Map.hpp"
+#include "Text.hpp"
 #include "Vector.hpp"
+#include "Widget.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
+#include <memory>
 #include <string>
 
 DM_EntityFx::DM_EntityFx(Entity &entity, Anim &anim, float offset,
@@ -53,15 +56,16 @@ void DM_StaticFx::render(SDL_Rect const &camera) {
 
 DisplayManager::DisplayManager(void)
     : _width(0), _height(0), _window(nullptr), _renderer(nullptr),
-      _camera({0, 0, 0, 0}) {
-  resize(640 * 2, 480 * 2);
-  /*resize(640, 480);*/
+      _camera({0, 0, 0, 0}), _ui(nullptr) {
+  /*resize(640 * 2, 480 * 2);*/
+  resize(640, 480);
   SDL_Init(SDL_INIT_VIDEO);
   TTF_Init();
   _window = SDL_CreateWindow("Client", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, _width, _height,
                              SDL_WINDOW_SHOWN);
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+  _ui.setRenderer(_renderer);
   _fillAtlas();
   _fillAnims();
   _fillGuiText();
@@ -142,8 +146,9 @@ void DisplayManager::renderFrame(int playerId, EntityManager<Player> &EMPlayer,
     fx.render(_camera);
   if (player)
     _updateGuiText(*player);
-  for (auto &txt : _guiTexts)
-    txt.second.draw();
+  // for (auto &txt : _guiTexts)
+  //   txt.second.draw();
+  _ui.draw();
   SDL_RenderPresent(_renderer);
   removeStoppedFx();
 }
@@ -168,15 +173,16 @@ void DisplayManager::_fillAnims(void) {
 }
 
 void DisplayManager::_fillGuiText(void) {
-  _guiTexts.emplace(AMMO_CLIP, Text(_renderer));
-  Text &clipText = _guiTexts.at(AMMO_CLIP);
-  clipText.setPointSize(24);
-  clipText.setText("-");
-  clipText.setPos(10, 440);
-  _guiTexts.emplace(AMMO_BELT, Text(_renderer));
-  Text &beltText = _guiTexts.at(AMMO_BELT);
-  beltText.setText("-");
-  beltText.setPos(10, 460);
+  auto textAmmo = std::make_shared<ui::Text>("TextAmmo");
+  textAmmo->setPointSize(12);
+  textAmmo->setText("-");
+  textAmmo->setPos(10, 460);
+  _ui.addChild(textAmmo);
+  auto textClip = std::make_shared<ui::Text>("TextClip");
+  textClip->setPointSize(24);
+  textClip->setText("-");
+  textClip->setPos(10, 440);
+  _ui.addChild(textClip);
 }
 
 void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
@@ -212,8 +218,10 @@ void DisplayManager::removeStoppedFx(void) {
 }
 
 void DisplayManager::_updateGuiText(Player const &player) {
-  _guiTexts.at(AMMO_CLIP).setText(std::to_string(player.weapon->clip));
-  _guiTexts.at(AMMO_BELT).setText(std::to_string(player.weapon->ammo));
+  std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextAmmo"))
+      ->setText(std::to_string(player.weapon->ammo));
+  std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextClip"))
+      ->setText(std::to_string(player.weapon->clip));
 }
 
 // DEBUG

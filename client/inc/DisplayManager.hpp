@@ -10,7 +10,7 @@
 #include "Mob.hpp"
 #include "Player.hpp"
 #include "Tex.hpp"
-#include "Text.hpp"
+#include "UI.hpp"
 #include "Vector.hpp"
 
 enum DMSprite {
@@ -86,9 +86,10 @@ private:
   SDL_Window *_window;
   SDL_Renderer *_renderer;
   SDL_Rect _camera;
+  ui::UI _ui;
   std::unordered_map<DMSprite, Tex> _atlas;
   std::unordered_map<DMAnim, Anim> _anims;
-  std::unordered_map<DMText, Text> _guiTexts;
+  // std::unordered_map<DMText, Text> _guiTexts;
   std::vector<std::vector<Tile>> _mapTiles;
   std::vector<DM_EntityFx> _fxEntity;
   std::vector<DM_StaticFx> _fxStatic;

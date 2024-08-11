@@ -7,8 +7,12 @@
 #include <string>
 #include <unordered_map>
 
+#include "Widget.hpp"
+
 #define DEFAULT_FONT "../assets/BrassMonoRegular-d9WLg.ttf"
 #define DEFAUT_FONT_POINTSIZE 12
+
+namespace ui {
 
 class FontManager {
 public:
@@ -28,36 +32,30 @@ private:
   std::unordered_map<std::string, TTF_Font *> _fonts;
 };
 
-class Text {
+class Text : public Widget {
 public:
-  Text(SDL_Renderer *renderer);
+  Text(void);
+  Text(std::string label);
   Text(Text const &other);
   ~Text(void);
   Text &operator=(const Text &other);
 
-  void setText(std::string const &text);
-  void setFont(std::string const &fontPath, int pointSize);
-  void setPointSize(int pointSize);
-  void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xFF);
-  void setPos(int x, int y);
-  int getWidth(void) const;
-  int getHeight(void) const;
-  void draw(int x, int y);
-  void draw(void);
+  Text &setText(std::string const &text);
+  Text &setFont(std::string const &fontPath, int pointSize);
+  Text &setPointSize(int pointSize);
+  Widget &setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xFF) override;
+  Widget &draw(void) override;
 
 private:
-  Text(void);
   void _generateTexture(void);
 
 private:
   std::string _fontPath;
   int _pointSize;
   std::string _text;
-  SDL_Renderer *_renderer;
   SDL_Texture *_texture;
-  SDL_Color _color;
   TTF_Font *_font;
-  SDL_Rect _rect;
 };
+} // namespace ui
 
 #endif // !TEXT_HPP

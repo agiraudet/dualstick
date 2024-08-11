@@ -1,3 +1,4 @@
 -Iserver/inc
 -Iclient/inc
 -Icommon/inc
+-Iclient/inc/ui

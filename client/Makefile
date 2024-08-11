@@ -3,7 +3,7 @@ NAME            := c
 DEPS            := -lSDL2 -lSDL2_image -lSDL2_ttf -lenet
 
 CMN_DIR         := ../common
-INC_DIR         := ./inc $(CMN_DIR)/inc
+INC_DIR         := ./inc $(CMN_DIR)/inc ./inc/ui
 
 CMN_BUILD_DIR   := $(CMN_DIR)/build
 CMN_SRCS_DIR    := $(CMN_DIR)/src
@@ -17,14 +17,17 @@ CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))
 
 BUILD_DIR       := ./build
 SRCS_DIR        := ./src
-SRCS            := Anim.cpp \
-									 Client.cpp \
-									 DisplayManager.cpp \
-                   Engine.cpp \
-									 Tex.cpp \
-									 Text.cpp \
-                   Timer.cpp \
-                   main.cpp
+SRCS            :=	Anim.cpp \
+										Client.cpp \
+										DisplayManager.cpp \
+										Engine.cpp \
+										Tex.cpp \
+										Timer.cpp \
+										ui/UI.cpp \
+										ui/Bar.cpp \
+										ui/Text.cpp \
+										ui/Widget.cpp \
+										main.cpp
 OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
 
 INC_FLAGS       := $(addprefix -I, $(INC_DIR))
@@ -35,7 +38,7 @@ $(NAME): $(OBJS) $(CMN_OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(CMN_OBJS) $(DEPS) -o $@
 
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)/ui
 
 $(CMN_BUILD_DIR):
 	mkdir -p $(CMN_BUILD_DIR)
