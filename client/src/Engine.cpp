@@ -14,6 +14,7 @@
 #include <enet/types.h>
 #include <exception>
 #include <iostream>
+#include <unordered_set>
 
 Engine::Engine(void)
     : _client(Client()), _state(LOADING),
@@ -44,9 +45,9 @@ void Engine::run(void) {
         if (id != _player->getId())
           player->move();
       }
-      /*for (auto &[id, mob] : _EMMobs) {*/
-      /*  mob->move();*/
-      /*}*/
+      for (auto &[id, mob] : _EMMobs) {
+        mob->move();
+      }
       if (_player && _player->isAlive()) {
         _player->applyInput();
         _player->move(*_map);
@@ -94,7 +95,8 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
     break;
   case SDLK_SPACE:
     if (_player->weapon->fire()) {
-      ENetPacket *pck = packageMessage(_msgPlayerUpdate, PLR_SHOOT, true);
+      MessagePlayerShoot msg = {_player->getId()};
+      ENetPacket *pck = packageMessage(msg, PLR_SHOOT, true);
       _client.sendMessage(pck);
       _dm.addEntityFx(*_player, SHOOT, _player->getSize() * 0.75, 90.f).start();
     }
@@ -188,9 +190,12 @@ void Engine::receiveMsg(MessageGameState *msg) {
     else
       _updateEntity(_EMPlayers.create(msg->entity[i].id), msg->entity[i]);
   }
+  std::unordered_set<int> currentMobsId;
   for (; i < msg->nplayer + msg->nmob; i++) {
     _updateEntity(_EMMobs.create(msg->entity[i].id), msg->entity[i]);
+    currentMobsId.insert(msg->entity[i].id);
   }
+  _EMMobs.removeIfNotInSet(currentMobsId);
 }
 
 void Engine::receiveMsg(MessageMap *msg) {

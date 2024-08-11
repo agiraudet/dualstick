@@ -209,8 +209,6 @@ void Listener::_handleRecv(ENetEvent &event, Server &serv) {
     }
     MessagePlayerShoot *msgShoot =
         (MessagePlayerShoot *)(event.packet->data + sizeof(MessageHeader));
-    serv.playerUpdate(msgShoot->id, msgShoot->pos, msgShoot->vel,
-                      msgShoot->angle);
     serv.playerShoot(msgShoot->id);
     break;
   }

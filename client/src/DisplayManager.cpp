@@ -184,8 +184,9 @@ void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
       entity.getPos().x - (float)entity.getSize() / 2 - _camera.x,
       entity.getPos().y - (float)entity.getSize() / 2 - _camera.y,
       entity.getAngle() * (180.0f / M_PI));
-  // DEBUG
+#ifdef DEBUG
   _renderVector(entity.getPos(), entity.getVel());
+#endif // DEBUG
 }
 
 void DisplayManager::_renderMap(void) {

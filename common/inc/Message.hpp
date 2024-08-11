@@ -52,9 +52,6 @@ struct MessagePlayerDead {
 
 struct MessagePlayerShoot {
   int id;
-  float angle;
-  Vector pos;
-  Vector vel;
 };
 
 struct MessageMobHit {

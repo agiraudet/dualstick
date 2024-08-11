@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 #define ENTITY_MAXSPEED 400.f
 #define ENTITY_SIZE 20
@@ -125,6 +126,16 @@ public:
         it = _entities.erase(it);
       else
         ++it;
+    }
+  }
+
+  void removeIfNotInSet(const std::unordered_set<EntityID> &idSet) {
+    for (auto it = _entities.begin(); it != _entities.end();) {
+      if (idSet.find(it->first) == idSet.end()) {
+        it = _entities.erase(it);
+      } else {
+        ++it;
+      }
     }
   }
 
