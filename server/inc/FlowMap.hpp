@@ -36,14 +36,14 @@ private:
   std::vector<std::vector<int>> _dataA;
   std::vector<std::vector<int>> _dataB;
   std::vector<Vector> _playerVec;
-  std::atomic<std::vector<std::vector<int>> *> _readBuffer;
-  std::atomic<std::vector<std::vector<int>> *> _writeBuffer;
+  std::vector<std::vector<int>> *_readBuffer;
+  std::vector<std::vector<int>> *_writeBuffer;
   int _width;
   int _height;
 
 private:
   std::mutex _playerMutex;
-  std::mutex _dataMutex;
+  std::mutex _readMutex;
   std::thread _updateThread;
   std::atomic<bool> _running;
 };

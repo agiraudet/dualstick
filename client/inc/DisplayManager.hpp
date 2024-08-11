@@ -11,6 +11,7 @@
 #include "Player.hpp"
 #include "Tex.hpp"
 #include "Text.hpp"
+#include "Vector.hpp"
 
 enum DMSprite {
   PLR_OTHER,
@@ -74,6 +75,10 @@ private:
   void _updateGuiText(Player const &player);
   void _renderEntity(Entity const &entity, DMSprite sprite);
   void _renderMap(void);
+
+  // DEBUG
+private:
+  void _renderVector(Vector const &pos, Vector const &vec);
 
 private:
   int _width;

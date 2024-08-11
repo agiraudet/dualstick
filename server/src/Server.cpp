@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <enet/enet.h>
 #include <iostream>
+#include <iterator>
 #include <ratio>
 #include <stdexcept>
 #include <thread>
@@ -92,33 +93,16 @@ void Server::_run() {
 }
 
 void Server::_updateGameState(void) {
-  /*std::this_thread::sleep_for(std::chrono::duration<double,
-   * std::milli>(1000));*/
   _EMMob.removeDeads();
   if (!_EMPlayer.empty()) {
     for (auto &[id, mob] : _EMMob) {
-      auto target = mob->findClosest(_EMPlayer);
-      Vector const &pos = mob->getPos();
-      Vector aim = _flow.getDir(mob->getTileX(), mob->getTileY());
-      if (aim == Vector(0, 0))
-        continue;
-      aim.x = (mob->getTileX() + aim.x) * _map.getTileSize() +
-              (float)_map.getTileSize() / 2;
-      aim.y = (mob->getTileY() + aim.y) * _map.getTileSize() +
-              (float)_map.getTileSize() / 2;
-      Vector dir = aim - pos;
-      dir = dir.normalize();
-      dir = dir * 80;
-      mob->setVel(dir);
-      /*mob->capSpeed();*/
-      mob->move();
-      if (target && mob->weapon) {
-        if (mob->getPos().distance(target->getPos()) < mob->weapon->range &&
-            mob->weapon->fire()) {
-          mob->weapon->dealDamage(*target, 0.f);
-          MessageMobAttack msg = {id, target->getId()};
-          _listener.msgOutAdd(-1, packageMessage(msg, MOB_ATTACK, true), ALL);
-        }
+      mob->findClosest(_EMPlayer);
+      mob->processDir(_flow.getDir(mob->getTileX(), mob->getTileY()),
+                      _map.getTileSize());
+      mob->move(_map);
+      if (mob->tryHitTarget()) {
+        MessageMobAttack msg = {id, mob->getTarget()->getId()};
+        _listener.msgOutAdd(-1, packageMessage(msg, MOB_ATTACK, true), ALL);
       }
     }
     _flow.updatePlayerVec(_EMPlayer);
@@ -153,6 +137,7 @@ void Server::_craftMsgGameState(void) {
 
 int Server::playerAdd(void) {
   int newPlayerId = _EMPlayer.create();
+  _flow.updatePlayerVec(_EMPlayer);
   _sendMap(newPlayerId);
   return newPlayerId;
 }
@@ -160,11 +145,17 @@ int Server::playerAdd(void) {
 int Server::playerAdd(int id) {
   Vector pos(64, 64);
   _EMPlayer.create(id)->setPos(pos);
+  _flow.updatePlayerVec(_EMPlayer);
   _sendMap(id);
   return id;
 }
 
-void Server::playerRemove(int id) { _EMPlayer.remove(id); }
+void Server::playerRemove(int id) {
+  _EMPlayer.remove(id);
+  _flow.updatePlayerVec(_EMPlayer);
+  std::cout << "[Server] Removed player " << id << std::endl;
+  std::cout << "[Server] Players remaining: " << _EMPlayer.size() << std::endl;
+}
 
 void Server::playerUpdate(int id, Vector &pos, Vector &vel, float angle) {
   auto player = _EMPlayer.get(id);

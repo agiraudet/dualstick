@@ -9,6 +9,7 @@ Mob::Mob(void) : Entity() {
   _maxSpeed *= 0.5;
   weapon = new Weapon;
   _initWeapon();
+  _target = nullptr;
 }
 
 Mob::Mob(int id) : Entity() {
@@ -16,11 +17,12 @@ Mob::Mob(int id) : Entity() {
   _maxSpeed *= 0.5;
   weapon = new Weapon;
   _initWeapon();
+  _target = nullptr;
 }
 
 Mob::~Mob(void) {}
 
-Vector const &Mob::getTarget(void) const { return _target; }
+std::shared_ptr<Player> Mob::getTarget(void) const { return _target; }
 
 std::shared_ptr<Player>
 Mob::findClosest(EntityManager<Player> const &EMPlayer) {
@@ -33,11 +35,10 @@ Mob::findClosest(EntityManager<Player> const &EMPlayer) {
       ptr = it->second;
     }
   }
-  if (ptr) {
-    _target = ptr->getPos();
-    aimAngle(_target.x, _target.y);
-  }
-  return ptr;
+  _target = ptr;
+  if (ptr)
+    aimAngle(_target->getPos().x, _target->getPos().y);
+  return _target;
 }
 
 void Mob::_initWeapon(void) {
@@ -47,4 +48,30 @@ void Mob::_initWeapon(void) {
     weapon->damage = 1;
     weapon->cd = std::chrono::milliseconds(1000);
   }
+}
+
+void Mob::processDir(Vector aim, int tileSize) {
+  if (aim.x == 0.f && aim.y == 0.f) {
+    setVel(aim);
+    return;
+  }
+  aim.x = (getTileX() + aim.x) * tileSize + (float)tileSize / 2;
+  aim.y = (getTileY() + aim.y) * tileSize + (float)tileSize / 2;
+  aim -= _position;
+  aim.normalize();
+  aim = aim * 4; // TMP speed;
+  // TODO we should check that the vector is never longer that a tile;
+  setVel(aim);
+}
+
+bool Mob::tryHitTarget(void) {
+  if (!_target || !weapon)
+    return false;
+  if (_position.distance(_target->getPos()) <= weapon->range) {
+    if (weapon->fire()) {
+      weapon->dealDamage(*_target, 0.f);
+      return true;
+    }
+  }
+  return false;
 }

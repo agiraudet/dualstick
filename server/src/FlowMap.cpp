@@ -18,25 +18,25 @@ void FlowMap::init(void) {
   _width = _dataA[0].size();
   _height = _dataA.size();
   _dataB = _dataA;
-  _writeBuffer.store(&_dataA);
-  _readBuffer.store(&_dataB);
+  _writeBuffer = &_dataA;
+  _readBuffer = &_dataB;
 }
 
 void FlowMap::reset(void) {
-  for (auto &row : (*_writeBuffer)) {
+  for (auto &row : *_writeBuffer) {
     std::fill(row.begin(), row.end(), INT_MAX);
   }
 }
 
 int FlowMap::getValue(int x, int y) {
-  std::lock_guard<std::mutex> guard(_dataMutex);
+  std::lock_guard<std::mutex> guard(_readMutex);
   return (*_readBuffer)[y][x];
 }
 
 Vector FlowMap::getDir(int x, int y) {
   if (x < 0 || x >= _width || y < 0 || y >= _height)
     return Vector(0, 0);
-  std::lock_guard<std::mutex> guard(_dataMutex);
+  std::lock_guard<std::mutex> guard(_readMutex);
   std::vector<Vector> directions = {
       Vector(0, -1), // N
       Vector(1, 0),  // E
@@ -59,7 +59,7 @@ Vector FlowMap::getDir(int x, int y) {
 }
 
 void FlowMap::print(void) {
-  for (const auto &row : (*_readBuffer)) {
+  for (const auto &row : *_readBuffer) {
     for (const auto &elem : row) {
       if (elem > 999)
         std::cout << "   ";
@@ -134,8 +134,8 @@ void FlowMap::_updateLoop() {
 }
 
 void FlowMap::_swapBuffers(void) {
-  std::lock_guard<std::mutex> guard(_dataMutex);
-  auto tmp = _writeBuffer.load();
-  _writeBuffer.store(_readBuffer);
-  _readBuffer.store(tmp);
+  std::lock_guard<std::mutex> guard(_readMutex);
+  auto tmp = _writeBuffer;
+  _writeBuffer = _readBuffer;
+  _readBuffer = tmp;
 }

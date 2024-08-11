@@ -1,7 +1,9 @@
 #include "DisplayManager.hpp"
 #include "Entity.hpp"
 #include "Map.hpp"
+#include "Vector.hpp"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
 #include <string>
@@ -182,6 +184,8 @@ void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
       entity.getPos().x - (float)entity.getSize() / 2 - _camera.x,
       entity.getPos().y - (float)entity.getSize() / 2 - _camera.y,
       entity.getAngle() * (180.0f / M_PI));
+  // DEBUG
+  _renderVector(entity.getPos(), entity.getVel());
 }
 
 void DisplayManager::_renderMap(void) {
@@ -209,4 +213,12 @@ void DisplayManager::removeStoppedFx(void) {
 void DisplayManager::_updateGuiText(Player const &player) {
   _guiTexts.at(AMMO_CLIP).setText(std::to_string(player.weapon->clip));
   _guiTexts.at(AMMO_BELT).setText(std::to_string(player.weapon->ammo));
+}
+
+// DEBUG
+void DisplayManager::_renderVector(Vector const &pos, Vector const &vec) {
+  SDL_SetRenderDrawColor(_renderer, 0xFF, 0x00, 0x00, 0xFF);
+  int startX = pos.x - _camera.x;
+  int startY = pos.y - _camera.y;
+  SDL_RenderDrawLine(_renderer, startX, startY, startX + vec.x, startY + vec.y);
 }

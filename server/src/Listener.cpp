@@ -169,6 +169,8 @@ void Listener::_handleDisconnect(ENetEvent &event, Server &serv) {
     if (p.second == event.peer)
       oldPeerId = p.first;
   }
+  std::cout << "[Listener] Player " << oldPeerId << " disconnected"
+            << std::endl;
   if (oldPeerId >= 0) {
     serv.playerRemove(oldPeerId);
     _peers.erase(oldPeerId);

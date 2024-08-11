@@ -112,6 +112,8 @@ void Entity::aimAngle(int targetX, int targetY) {
 
 void Entity::capSpeed(void) { _velocity.capIntensity(_maxSpeed * _maxSpeed); }
 
+void Entity::capSpeed(int speed) { _velocity.capIntensity(speed); }
+
 void Entity::injure(int damage) {
   _hp -= damage;
   if (_hp <= 0) {

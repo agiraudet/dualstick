@@ -101,7 +101,7 @@ Vector Vector::operator/(Vector const &other) const {
 
 // Scalar operators
 Vector Vector::operator+(float scalar) const {
-  return Vector(+scalar, y + scalar);
+  return Vector(x + scalar, y + scalar);
 }
 
 Vector Vector::operator-(float scalar) const {

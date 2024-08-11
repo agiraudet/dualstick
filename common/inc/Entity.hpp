@@ -46,6 +46,7 @@ public:
   void move(Map &map);
   void aimAngle(int targetX, int targetY);
   void capSpeed(void);
+  void capSpeed(int speed);
   void injure(int damage);
 
 public:
