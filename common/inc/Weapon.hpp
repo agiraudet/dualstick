@@ -11,7 +11,7 @@ public:
   Weapon(void);
   ~Weapon(void);
 
-  void reload(void);
+  bool reload(void);
   bool fire(void);
   void dealDamage(Entity &target, double dist);
 

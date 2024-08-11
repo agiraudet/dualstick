@@ -14,6 +14,7 @@
 #include "Player.hpp"
 #include "Server.hpp"
 #include "Vector.hpp"
+#include "WaveManager.hpp"
 
 Server *g_serverInstance = nullptr;
 
@@ -48,13 +49,10 @@ void Server::_loadMap(std::string const &path) {
 int Server::loadGame(std::string const &mapFile) {
   _loadMap(mapFile);
   _flow.init();
-
-  Vector pos(64 + 16, 128 + 16);
-  Vector pos2(32 * 22, 32 * 24);
-  Vector pos3(32 * 7, 32 * 7);
-  _EMMob.get(_EMMob.create())->setPos(pos3);
-  _EMMob.get(_EMMob.create())->setPos(pos2);
-  _EMMob.get(_EMMob.create())->setPos(pos);
+  WaveManager::WM().addSpawner(_EMMob, Vector(20 * 32 + 16, 4 * 32 + 16));
+  WaveManager::WM().newWave(9);
+  WaveManager::WM().setDelayAll(std::chrono::milliseconds(5000));
+  WaveManager::WM().setRunAll(true);
   return 0;
 }
 
@@ -94,6 +92,7 @@ void Server::_run() {
 
 void Server::_updateGameState(void) {
   _EMMob.removeDeads();
+  WaveManager::WM().process();
   if (!_EMPlayer.empty()) {
     for (auto &[id, mob] : _EMMob) {
       mob->findClosest(_EMPlayer);
@@ -174,4 +173,10 @@ void Server::playerShoot(int id) {
       _listener.msgOutAdd(id, packageMessage(msg, MOB_HIT, true), ALL);
     }
   }
+}
+
+void Server::playerReload(int id) {
+  auto player = _EMPlayer.get(id);
+  if (player && player->weapon)
+    player->weapon->reload();
 }

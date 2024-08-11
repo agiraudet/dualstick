@@ -102,7 +102,11 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
     }
     break;
   case SDLK_r:
-    _player->weapon->reload();
+    if (_player->weapon->reload()) {
+      MessagePlayerReload msg = {_player->getId()};
+      ENetPacket *pck = packageMessage(msg, PLR_RELOAD, true);
+      _client.sendMessage(pck);
+    }
     break;
   case SDLK_F1:
     std::cout << _player->getPos() << std::endl;

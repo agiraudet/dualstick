@@ -185,8 +185,9 @@ int Map::rayCast(Player &shooter, EntityManager<Mob> &shooties, int &hitX,
     for (double t = 0; t < maxDist; t += rayInc) {
       ray.x = shooter.getPos().x + t * cos(angle);
       ray.y = shooter.getPos().y + t * sin(angle);
-      if (shooties.empty())
+      if (shooties.empty()) {
         return -1;
+      }
       for (auto &[id, mob] : shooties) {
         if (ray.distance(mob->getPos()) <= mob->getSize()) {
           shooter.weapon->dealDamage(*mob, t);

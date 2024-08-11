@@ -13,8 +13,6 @@
 #define MAX_N_MOB 25
 #define MSGMAP_DATALEN 512
 
-enum mobType { BASIC };
-
 enum MessageType {
   PLR_CO,
   PLR_DISCO,
@@ -22,6 +20,7 @@ enum MessageType {
   PLR_ID,
   PLR_DEAD,
   PLR_SHOOT,
+  PLR_RELOAD,
   MOB_UPDATE,
   MOB_HIT,
   MOB_ATTACK,
@@ -51,6 +50,10 @@ struct MessagePlayerDead {
 };
 
 struct MessagePlayerShoot {
+  int id;
+};
+
+struct MessagePlayerReload {
   int id;
 };
 

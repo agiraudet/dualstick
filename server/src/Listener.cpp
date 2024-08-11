@@ -212,6 +212,18 @@ void Listener::_handleRecv(ENetEvent &event, Server &serv) {
     serv.playerShoot(msgShoot->id);
     break;
   }
+  case PLR_RELOAD: {
+    if (event.packet->dataLength !=
+        sizeof(MessageHeader) + sizeof(MessagePlayerReload)) {
+      std::cerr << "Received PLR_RELOAD packet with invalid length"
+                << std::endl;
+      break;
+    }
+    MessagePlayerReload *msgReload =
+        (MessagePlayerReload *)(event.packet->data + sizeof(MessageHeader));
+    serv.playerReload(msgReload->id);
+    break;
+  }
   default:
     break;
   }

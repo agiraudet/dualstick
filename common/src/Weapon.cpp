@@ -12,13 +12,13 @@ Weapon::Weapon(void)
 
 Weapon::~Weapon(void) {}
 
-void Weapon::reload(void) {
-  if (unlimitedAmmo)
-    return;
+bool Weapon::reload(void) {
+  if (unlimitedAmmo || clip >= maxClip)
+    return false;
   const auto currentTime = std::chrono::high_resolution_clock::now();
   if (ammo <= 0 || currentTime - _lastReload < reloadTime ||
       currentTime - _lastFired < cd)
-    return;
+    return false;
   if (ammo >= maxClip) {
     clip = maxClip;
     ammo -= maxClip;
@@ -27,7 +27,7 @@ void Weapon::reload(void) {
     ammo = 0;
   }
   _lastReload = std::chrono::high_resolution_clock::now();
-  printf("Reload...\n");
+  return true;
 }
 
 bool Weapon::fire(void) {

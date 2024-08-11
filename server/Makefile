@@ -20,6 +20,8 @@ SRCS_DIR        := ./src
 SRCS            := FlowMap.cpp \
 									 Listener.cpp \
 									 Server.cpp \
+									 Spawner.cpp \
+									 WaveManager.cpp \
                    main.cpp
 OBJS            := $(addprefix $(BUILD_DIR)/, $(SRCS:%.cpp=%.o))
 
