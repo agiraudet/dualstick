@@ -27,12 +27,16 @@ void Vector::capIntensity(float const maxIntensity) {
   }
 }
 
-Vector Vector::normalize(void) const {
+Vector &Vector::normalize(void) {
   float mag = magnitude();
   if (mag <= 0) {
-    return Vector(0, 0);
+    x = 0;
+    y = 0;
+  } else {
+    x /= mag;
+    y /= mag;
   }
-  return Vector(x / mag, y / mag);
+  return *this;
 }
 
 float Vector::getX(void) const { return x; }

@@ -35,8 +35,9 @@ public:
   bool pointIsColliding(int x, int y) const;
   bool boxIsColliding(int x, int y, int w, int h) const;
   bool checkCollision(int tileIndex) const;
-  int rayCast(Player &shooter, EntityManager<Mob> &shooties, int &hitX,
-              int &hitY);
+  bool lineOfSight(Entity &entA, Entity &entB, double maxDist = 0.f);
+  std::shared_ptr<Entity> rayCast(Entity &shooter, EntityManager<Mob> &shooties,
+                                  double maxDist, int &hitX, int &hitY);
 
 protected:
   std::vector<int> _parseLine(const std::string &line) const;

@@ -95,7 +95,8 @@ void FlowMap::updatePlayerVec(EntityManager<Player> EMPlayer) {
   std::lock_guard<std::mutex> guard(_playerMutex);
   _playerVec.clear();
   for (auto const &[id, player] : EMPlayer) {
-    _playerVec.push_back(player->getPos());
+    if (player->isAlive())
+      _playerVec.push_back(player->getPos());
   }
 }
 

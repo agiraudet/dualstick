@@ -95,9 +95,13 @@ void Server::_updateGameState(void) {
   WaveManager::WM().process();
   if (!_EMPlayer.empty()) {
     for (auto &[id, mob] : _EMMob) {
-      mob->findClosest(_EMPlayer);
-      mob->processDir(_flow.getDir(mob->getTileX(), mob->getTileY()),
-                      _map.getTileSize());
+      auto target = mob->findClosest(_EMPlayer);
+      if (target && _map.lineOfSight(*mob, *target)) {
+        mob->setVelTowards(target->getPos());
+      } else {
+        mob->processDir(_flow.getDir(mob->getTileX(), mob->getTileY()),
+                        _map.getTileSize());
+      }
       mob->move(_map);
       if (mob->tryHitTarget()) {
         MessageMobAttack msg = {id, mob->getTarget()->getId()};
@@ -167,10 +171,13 @@ void Server::playerShoot(int id) {
   if (player) {
     int hitX = 0;
     int hitY = 0;
-    int hit = _map.rayCast(*player, _EMMob, hitX, hitY);
-    if (hit != -1) {
-      MessageMobHit msg = {hit, hitX, hitY};
-      _listener.msgOutAdd(id, packageMessage(msg, MOB_HIT, true), ALL);
+    if (player->weapon && player->weapon->fire()) {
+      auto hit =
+          _map.rayCast(*player, _EMMob, player->weapon->range, hitX, hitY);
+      if (hit) {
+        MessageMobHit msg = {hit->getId(), hitX, hitY};
+        _listener.msgOutAdd(id, packageMessage(msg, MOB_HIT, true), ALL);
+      }
     }
   }
 }

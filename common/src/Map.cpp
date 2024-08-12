@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 
@@ -175,30 +176,48 @@ bool Map::checkCollision(int tileIndex) const {
     return false;
   return true;
 }
-int Map::rayCast(Player &shooter, EntityManager<Mob> &shooties, int &hitX,
-                 int &hitY) {
-  if (shooter.weapon->fire()) {
-    const double rayInc = 1;
-    const double maxDist = shooter.weapon->range;
-    const double angle = shooter.getAngle();
+
+bool Map::lineOfSight(Entity &entA, Entity &entB, double maxDist) {
+  Vector posA = entA.getPos();
+  Vector posB = entB.getPos();
+  const double angle = entA.getAngle();
+  double dist = posA.distance(posB);
+  dist = (maxDist == 0.f || dist < maxDist) ? dist : maxDist;
+
+  for (double t = 0; t < dist; t += 1) {
     Vector ray;
-    for (double t = 0; t < maxDist; t += rayInc) {
-      ray.x = shooter.getPos().x + t * cos(angle);
-      ray.y = shooter.getPos().y + t * sin(angle);
-      if (shooties.empty()) {
-        return -1;
-      }
-      for (auto &[id, mob] : shooties) {
-        if (ray.distance(mob->getPos()) <= mob->getSize()) {
-          shooter.weapon->dealDamage(*mob, t);
-          hitX = ray.x;
-          hitY = ray.y;
-          return id;
-        } else if (pointIsColliding(ray.x, ray.y)) {
-          return -1;
-        }
+    ray.x = posA.x + t * cos(angle);
+    ray.y = posA.y + t * sin(angle);
+    if (pointIsColliding(ray.x, ray.y))
+      return false;
+    if (ray.distance(posB) <= entB.getSize())
+      return true;
+  }
+  return true;
+}
+
+std::shared_ptr<Entity> Map::rayCast(Entity &shooter,
+                                     EntityManager<Mob> &shooties,
+                                     double maxDist, int &hitX, int &hitY) {
+  const double rayInc = 1;
+  const double angle = shooter.getAngle();
+  Vector ray;
+  for (double t = 0; t < maxDist; t += rayInc) {
+    ray.x = shooter.getPos().x + t * cos(angle);
+    ray.y = shooter.getPos().y + t * sin(angle);
+    if (shooties.empty()) {
+      return nullptr;
+    }
+    for (auto &[id, mob] : shooties) {
+      if (ray.distance(mob->getPos()) <= mob->getSize()) {
+        shooter.weapon->dealDamage(*mob, t);
+        hitX = ray.x;
+        hitY = ray.y;
+        return mob;
+      } else if (pointIsColliding(ray.x, ray.y)) {
+        return nullptr;
       }
     }
   }
-  return -1;
+  return nullptr;
 }

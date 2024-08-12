@@ -16,7 +16,7 @@ struct Vector {
   void setY(float const y);
   void setXY(float const x, float const y);
   void capIntensity(float const maxIntensity);
-  Vector normalize(void) const;
+  Vector &normalize(void);
 
   float getX(void) const;
   float getY(void) const;

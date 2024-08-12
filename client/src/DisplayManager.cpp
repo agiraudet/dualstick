@@ -3,7 +3,6 @@
 #include "Map.hpp"
 #include "Text.hpp"
 #include "Vector.hpp"
-#include "Widget.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
@@ -176,13 +175,20 @@ void DisplayManager::_fillGuiText(void) {
   auto textAmmo = std::make_shared<ui::Text>("TextAmmo");
   textAmmo->setPointSize(12);
   textAmmo->setText("-");
-  textAmmo->setPos(10, 460);
+  textAmmo->setPos(10, 440);
   _ui.addChild(textAmmo);
   auto textClip = std::make_shared<ui::Text>("TextClip");
   textClip->setPointSize(24);
   textClip->setText("-");
-  textClip->setPos(10, 440);
+  textClip->setPos(10, 420);
   _ui.addChild(textClip);
+  auto barHealth = std::make_shared<ui::Bar>("BarHealth");
+  barHealth->setPos(10, 460);
+  barHealth->setSizes(50, 10);
+  barHealth->setColor(0, 0xFF, 0);
+  barHealth->setMax(10);
+  barHealth->setCurrent(10);
+  _ui.addChild(barHealth);
 }
 
 void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
@@ -222,6 +228,8 @@ void DisplayManager::_updateGuiText(Player const &player) {
       ->setText(std::to_string(player.weapon->ammo));
   std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextClip"))
       ->setText(std::to_string(player.weapon->clip));
+  std::dynamic_pointer_cast<ui::Bar>(_ui.getChild("BarHealth"))
+      ->setCurrent(player.getHp());
 }
 
 // DEBUG

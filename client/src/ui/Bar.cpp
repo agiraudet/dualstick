@@ -17,11 +17,13 @@ ui::Bar::~Bar(void) {}
 
 ui::Bar &ui::Bar::setMax(int max) {
   _max = max;
+  _update();
   return *this;
 }
 
 ui::Bar &ui::Bar::setCurrent(int current) {
   _current = current;
+  _update();
   return *this;
 }
 
@@ -42,7 +44,12 @@ int ui::Bar::getMax(void) const { return _max; }
 
 int ui::Bar::getCurrent(void) const { return _current; }
 
-void ui::Bar::_update(void) { _rectCurrent.w = (_current * _rect.w) / _max; }
+void ui::Bar::_update(void) {
+  _rectCurrent.x = _rect.x;
+  _rectCurrent.y = _rect.y;
+  _rectCurrent.h = _rect.h;
+  _rectCurrent.w = (_current * _rect.w) / _max;
+}
 
 ui::Widget &ui::Bar::draw(void) {
   SDL_SetRenderDrawColor(_renderer, _colorBg.r, _colorBg.g, _colorBg.b,

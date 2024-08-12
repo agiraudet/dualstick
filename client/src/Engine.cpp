@@ -178,8 +178,14 @@ void Engine::receiveMsg(MessageMobHit *msg) {
 
 void Engine::receiveMsg(MessageMobAttack *msg) {
   auto player = _EMPlayers.get(msg->playerId);
-  if (player)
+  if (player) {
+    auto mob = _EMMobs.get(msg->mobId);
+    if (mob && mob->weapon) {
+      mob->weapon->dealDamage(*player, 0.f);
+      printf("%d\n", player->getHp());
+    }
     _dm.addEntityFx(*player, MOB_ATCK, (float)player->getSize() / 2).start();
+  }
 }
 
 void Engine::receiveMsg(MessageGameState *msg) {
