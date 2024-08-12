@@ -1,15 +1,10 @@
 # Roadmap
 
-## MVP (Minimum Viable Product)
-
-- **Damage System**: Implement player damage and death mechanics.
-- **Spawner System**: Develop and integrate the enemy spawner system.
-- **Ammo HUD**: Create a HUD element to display the player's ammunition.
-
-## After that
+## TODO
 
 - **Enemy Flock Behavior**: Implement AI behaviors for enemy formations and group dynamics.
 - **Lobby System**: Design and implement a multiplayer lobby system.
+- **Server CLI**: Create a command-line interface for managing the server.
 - **Improved Map Editor**: Enhance the map editor with additional features and user-friendly tools.
 - **Weapon Switching**: Enable players to change weapons during gameplay.
 - **Wave System**: Introduce waves of enemies to increase difficulty over time.

@@ -103,6 +103,8 @@ ui::Text &ui::Text::setPointSize(int pointSize) {
 }
 
 ui::Widget &ui::Text::setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+  if (_color.r == r && _color.g == g && _color.b == b && _color.a == a)
+    return *this;
   _color = {r, g, b, a};
   _generateTexture();
   return *this;

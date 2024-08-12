@@ -18,6 +18,7 @@ public:
   void setRunAll(bool running);
   void setDelayAll(std::chrono::high_resolution_clock::duration delay);
   void process(void);
+  int getWave(void) const;
   void newWave(int n);
   template <typename T> void addSpawner(EntityManager<T> &em, Vector pos) {
     _spawners.push_back(std::make_unique<Spawner<T>>(em, pos));
@@ -29,6 +30,7 @@ private:
 
 private:
   std::vector<std::unique_ptr<ISpawner>> _spawners;
+  int _wave;
 };
 
 #endif

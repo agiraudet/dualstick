@@ -189,6 +189,11 @@ void DisplayManager::_fillGuiText(void) {
   barHealth->setMax(10);
   barHealth->setCurrent(10);
   _ui.addChild(barHealth);
+  // auto textWave(std::make_shared<ui::Text>("TextWave"));
+  // textWave->setPointSize(24);
+  // textWave->setText("-");
+  // textWave->setPos(10, 10);
+  // _ui.addChild(textWave);
 }
 
 void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
@@ -224,12 +229,24 @@ void DisplayManager::removeStoppedFx(void) {
 }
 
 void DisplayManager::_updateGuiText(Player const &player) {
-  std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextAmmo"))
-      ->setText(std::to_string(player.weapon->ammo));
-  std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextClip"))
-      ->setText(std::to_string(player.weapon->clip));
+  int nClip = player.weapon->clip;
+  auto textClip = std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextClip"));
+  textClip->setText(std::to_string(nClip));
+  if (nClip <= 0)
+    textClip->setColor(0xFF, 0, 0);
+  else
+    textClip->setColor(0xFF, 0xFF, 0xFF);
+  int nAmmo = player.weapon->ammo;
+  auto textAmmo = std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextAmmo"));
+  textAmmo->setText(std::to_string(nAmmo));
+  if (nAmmo <= 0)
+    textAmmo->setColor(0xFF, 0, 0);
+  else
+    textAmmo->setColor(0xFF, 0xFF, 0xFF);
   std::dynamic_pointer_cast<ui::Bar>(_ui.getChild("BarHealth"))
       ->setCurrent(player.getHp());
+  // std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextWave"))
+  //     ->setText(std::to_string(WaveManager::WM().getWave()));
 }
 
 // DEBUG

@@ -10,6 +10,8 @@
 #include "Map.hpp"
 #include "Message.hpp"
 
+enum servStatus { LOADING, READY, RUNNING, STOPPED };
+
 class Server {
 public:
   Server();
@@ -37,7 +39,7 @@ private:
   void _craftMsgGameState(void);
 
 private:
-  bool _running;
+  servStatus _status;
   Listener _listener;
   Map _map;
   FlowMap _flow;

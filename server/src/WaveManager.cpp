@@ -1,7 +1,7 @@
 #include "WaveManager.hpp"
 #include "Spawner.hpp"
 
-WaveManager::WaveManager(void) {}
+WaveManager::WaveManager(void) : _wave(0) {}
 
 WaveManager::~WaveManager(void) {}
 
@@ -26,9 +26,12 @@ void WaveManager::process() {
     spawner->spawnIfNeeded();
 }
 
+int WaveManager::getWave(void) const { return _wave; }
+
 void WaveManager::newWave(int n) {
   if (_spawners.empty())
     return;
+  _wave++;
   int div = n / _spawners.size();
   int remain = n % _spawners.size();
   for (auto &spawner : _spawners)

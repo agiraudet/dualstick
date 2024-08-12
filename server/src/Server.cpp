@@ -26,7 +26,7 @@ void signalHandler(int signum) {
   }
 }
 
-Server::Server() : _running(false), _flow(_map) {
+Server::Server() : _status(LOADING), _flow(_map) {
   if (enet_initialize() != 0) {
     throw std::runtime_error("An error occurred while initializing ENet.");
   }
@@ -50,7 +50,9 @@ int Server::loadGame(std::string const &mapFile) {
   _loadMap(mapFile);
   _flow.init();
   WaveManager::WM().addSpawner(_EMMob, Vector(20 * 32 + 16, 4 * 32 + 16));
-  WaveManager::WM().newWave(9);
+  WaveManager::WM().addSpawner(_EMMob, Vector(5 * 32 + 16, 28 * 32 + 16));
+  WaveManager::WM().addSpawner(_EMMob, Vector(26 * 32 + 16, 21 * 32 + 16));
+  WaveManager::WM().newWave(12);
   WaveManager::WM().setDelayAll(std::chrono::milliseconds(5000));
   WaveManager::WM().setRunAll(true);
   return 0;
@@ -59,14 +61,14 @@ int Server::loadGame(std::string const &mapFile) {
 void Server::start() {
   if (!_listener.connect())
     exit(EXIT_FAILURE);
-  _running = true;
+  _status = READY;
   _flow.startUpdating();
   _run();
 }
 
 void Server::stop() {
   _flow.stopUpdating();
-  _running = false;
+  _status = STOPPED;
 }
 
 void Server::_run() {
@@ -74,16 +76,19 @@ void Server::_run() {
   constexpr auto tickDuration = std::chrono::milliseconds(1000 / tickRate);
   auto lastTick = std::chrono::high_resolution_clock::now();
 
-  while (_running) {
+  while (_status == RUNNING || _status == READY) {
     const auto currentTime = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double, std::milli> timeSinceLastTick =
         currentTime - lastTick;
-    _updateGameState();
+    if (_status == RUNNING) {
+      _updateGameState();
+    }
     _listener.recv(*this);
     _listener.send();
     if (timeSinceLastTick >= tickDuration) {
       lastTick = currentTime;
-      _sendGameSateToAll();
+      if (_status == RUNNING)
+        _sendGameSateToAll();
     } else {
       std::this_thread::sleep_for(tickDuration - timeSinceLastTick);
     }
@@ -146,6 +151,8 @@ int Server::playerAdd(void) {
 }
 
 int Server::playerAdd(int id) {
+  if (_status == READY)
+    _status = RUNNING;
   Vector pos(64, 64);
   _EMPlayer.create(id)->setPos(pos);
   _flow.updatePlayerVec(_EMPlayer);
@@ -158,6 +165,8 @@ void Server::playerRemove(int id) {
   _flow.updatePlayerVec(_EMPlayer);
   std::cout << "[Server] Removed player " << id << std::endl;
   std::cout << "[Server] Players remaining: " << _EMPlayer.size() << std::endl;
+  if (_EMPlayer.empty())
+    _status = READY;
 }
 
 void Server::playerUpdate(int id, Vector &pos, Vector &vel, float angle) {
