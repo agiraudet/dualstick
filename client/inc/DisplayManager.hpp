@@ -18,6 +18,7 @@ enum DMSprite {
   PLR_MAIN,
   MOB,
   TILES,
+  SHOP,
   ANIM_SHOOT,
   ANIM_DAMAGE,
   ANIM_MOB_ATCK
@@ -57,6 +58,7 @@ public:
   ~DisplayManager(void);
 
   void generateMapTiles(Map const &map);
+  void generateShopTiles(Map const &map);
   void resize(int width, int height);
   void centerCamera(Entity const &entity);
   void renderFrame(int playerId, EntityManager<Player> &EMPlayer,
@@ -67,14 +69,17 @@ public:
                     float angleAdjust = 0.f);
   Anim &addStaticFx(DMAnim anim, int x, int y);
   void removeStoppedFx(void);
+  void updateWaveNumber(int wave);
 
 private:
   void _fillAtlas(void);
   void _fillAnims(void);
-  void _fillGuiText(void);
-  void _updateGuiText(Player const &player);
-  void _renderEntity(Entity const &entity, DMSprite sprite);
+  void _fillGui(void);
+  void _updateGui(Player const &player);
+  void _renderEntity(Entity const &entity, DMSprite sprite,
+                     bool rotatedByVelocity = false);
   void _renderMap(void);
+  void _renderShop(void);
 
   // DEBUG
 private:
@@ -89,8 +94,8 @@ private:
   ui::UI _ui;
   std::unordered_map<DMSprite, Tex> _atlas;
   std::unordered_map<DMAnim, Anim> _anims;
-  // std::unordered_map<DMText, Text> _guiTexts;
   std::vector<std::vector<Tile>> _mapTiles;
+  std::vector<Tile> _shopTiles;
   std::vector<DM_EntityFx> _fxEntity;
   std::vector<DM_StaticFx> _fxStatic;
 };

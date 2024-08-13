@@ -1,6 +1,7 @@
 #include "DisplayManager.hpp"
 #include "Entity.hpp"
 #include "Map.hpp"
+#include "Shop.hpp"
 #include "Text.hpp"
 #include "Vector.hpp"
 #include <SDL2/SDL.h>
@@ -9,6 +10,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
 
 DM_EntityFx::DM_EntityFx(Entity &entity, Anim &anim, float offset,
                          float angleAdjust)
@@ -67,7 +69,7 @@ DisplayManager::DisplayManager(void)
   _ui.setRenderer(_renderer);
   _fillAtlas();
   _fillAnims();
-  _fillGuiText();
+  _fillGui();
 }
 
 DisplayManager::~DisplayManager(void) {
@@ -88,6 +90,16 @@ void DisplayManager::generateMapTiles(Map const &map) {
       line.push_back(tile);
     }
     _mapTiles.push_back(line);
+  }
+}
+
+void DisplayManager::generateShopTiles(Map const &map) {
+  _shopTiles.clear();
+  int tileSize = map.getTileSize();
+  for (auto const &shop : map.getShops()) {
+    _shopTiles.push_back(
+        {{shop->getX() * tileSize, shop->getY() * tileSize, tileSize, tileSize},
+         shop->getType()});
   }
 }
 
@@ -138,15 +150,13 @@ void DisplayManager::renderFrame(int playerId, EntityManager<Player> &EMPlayer,
   if (player && player->isAlive())
     _renderEntity(*player, PLR_MAIN);
   for (auto const &[id, mob] : EMMob)
-    _renderEntity(*mob, MOB);
+    _renderEntity(*mob, MOB, true);
   for (auto &fx : _fxStatic)
     fx.render(_camera);
   for (auto &fx : _fxEntity)
     fx.render(_camera);
   if (player)
-    _updateGuiText(*player);
-  // for (auto &txt : _guiTexts)
-  //   txt.second.draw();
+    _updateGui(*player);
   _ui.draw();
   SDL_RenderPresent(_renderer);
   removeStoppedFx();
@@ -157,6 +167,7 @@ void DisplayManager::_fillAtlas(void) {
   _atlas.emplace(PLR_MAIN, Tex(_renderer, "../assets/player.png"));
   _atlas.emplace(MOB, Tex(_renderer, "../assets/mob.png"));
   _atlas.emplace(TILES, Tex(_renderer, "../assets/tileset.png", 32));
+  _atlas.emplace(SHOP, Tex(_renderer, "../assets/shoptiles.png", 32));
   _atlas.emplace(ANIM_SHOOT, Tex(_renderer, "../assets/anim.png", 16));
   _atlas.emplace(ANIM_DAMAGE, Tex(_renderer, "../assets/damage.png", 16));
   _atlas.emplace(ANIM_MOB_ATCK, Tex(_renderer, "../assets/mob_attack.png", 16));
@@ -171,7 +182,7 @@ void DisplayManager::_fillAnims(void) {
   _anims.at(DAMAGE).setFps(120);
 }
 
-void DisplayManager::_fillGuiText(void) {
+void DisplayManager::_fillGui(void) {
   auto textAmmo = std::make_shared<ui::Text>("TextAmmo");
   textAmmo->setPointSize(12);
   textAmmo->setText("-");
@@ -189,18 +200,30 @@ void DisplayManager::_fillGuiText(void) {
   barHealth->setMax(10);
   barHealth->setCurrent(10);
   _ui.addChild(barHealth);
-  // auto textWave(std::make_shared<ui::Text>("TextWave"));
-  // textWave->setPointSize(24);
-  // textWave->setText("-");
-  // textWave->setPos(10, 10);
-  // _ui.addChild(textWave);
+  auto textWave(std::make_shared<ui::Text>("TextWave"));
+  textWave->setPointSize(24);
+  textWave->setText("-");
+  textWave->setPos(10, 10);
+  _ui.addChild(textWave);
+  auto textMoney(std::make_shared<ui::Text>("TextMoney"));
+  textMoney->setPointSize(24);
+  textMoney->setText("-");
+  textMoney->setPos(10, 30);
+  _ui.addChild(textMoney);
 }
 
-void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite) {
+void DisplayManager::_renderEntity(Entity const &entity, DMSprite sprite,
+                                   bool rotateByVelocity) {
+  float angle;
+  if (rotateByVelocity) {
+    auto velocity = entity.getVel();
+    angle = std::atan2(velocity.y, velocity.x) * (180.0f / M_PI);
+  } else {
+    angle = entity.getAngle() * (180.0f / M_PI);
+  }
   _atlas.at(sprite).drawRot(
       entity.getPos().x - (float)entity.getSize() / 2 - _camera.x,
-      entity.getPos().y - (float)entity.getSize() / 2 - _camera.y,
-      entity.getAngle() * (180.0f / M_PI));
+      entity.getPos().y - (float)entity.getSize() / 2 - _camera.y, angle);
 #ifdef DEBUG
   _renderVector(entity.getPos(), entity.getVel());
 #endif // DEBUG
@@ -213,6 +236,16 @@ void DisplayManager::_renderMap(void) {
         _atlas.at(TILES).draw(tile.rect.x - _camera.x, tile.rect.y - _camera.y,
                               tile.frame);
       }
+    }
+  }
+  _renderShop();
+}
+
+void DisplayManager::_renderShop(void) {
+  for (auto &tile : _shopTiles) {
+    if (SDL_HasIntersection(&_camera, &tile.rect) == SDL_TRUE) {
+      _atlas.at(SHOP).draw(tile.rect.x - _camera.x, tile.rect.y - _camera.y,
+                           tile.frame);
     }
   }
 }
@@ -228,7 +261,7 @@ void DisplayManager::removeStoppedFx(void) {
       _fxStatic.end());
 }
 
-void DisplayManager::_updateGuiText(Player const &player) {
+void DisplayManager::_updateGui(Player const &player) {
   int nClip = player.weapon->clip;
   auto textClip = std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextClip"));
   textClip->setText(std::to_string(nClip));
@@ -245,8 +278,14 @@ void DisplayManager::_updateGuiText(Player const &player) {
     textAmmo->setColor(0xFF, 0xFF, 0xFF);
   std::dynamic_pointer_cast<ui::Bar>(_ui.getChild("BarHealth"))
       ->setCurrent(player.getHp());
-  // std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextWave"))
-  //     ->setText(std::to_string(WaveManager::WM().getWave()));
+  auto textMoney =
+      std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextMoney"));
+  textMoney->setText("$" + std::to_string(player.getMoney()));
+}
+
+void DisplayManager::updateWaveNumber(int wave) {
+  std::dynamic_pointer_cast<ui::Text>(_ui.getChild("TextWave"))
+      ->setText("wave " + std::to_string(wave));
 }
 
 // DEBUG

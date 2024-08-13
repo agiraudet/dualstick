@@ -4,8 +4,8 @@
 #include <cstdio>
 
 Weapon::Weapon(void)
-    : unlimitedAmmo(false), damage(5), range(3000), ammo(100), clip(10),
-      maxClip(10), cd(200), reloadTime(1000) {
+    : unlimitedAmmo(false), damage(5), range(3000), ammo(100), maxAmmo(100),
+      clip(10), maxClip(10), cd(200), reloadTime(1000) {
   _lastFired = std::chrono::high_resolution_clock::now();
   _lastReload = _lastFired;
 }

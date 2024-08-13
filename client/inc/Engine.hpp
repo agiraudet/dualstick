@@ -31,10 +31,12 @@ public:
   void receiveMsg(MessagePlayerDisco *msg);
   void receiveMsg(MessagePlayerID *msg);
   void receiveMsg(MessagePlayerDead *msg);
+  void receiveMsg(MessagePlayerMoney *msg);
   void receiveMsg(MessageMobHit *msg);
   void receiveMsg(MessageMobAttack *msg);
   void receiveMsg(MessageGameState *msg);
   void receiveMsg(MessageMap *msg);
+  void receiveMsg(MessageMapShop *msg);
 
 private:
   void _removePlayer(int id);

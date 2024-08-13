@@ -2,7 +2,7 @@
 #include "Entity.hpp"
 #include "Message.hpp"
 #include "Mob.hpp"
-#include "Player.hpp"
+#include "Shop.hpp"
 #include <algorithm>
 #include <climits>
 #include <cmath>
@@ -11,6 +11,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 Map::Map() : _width(0), _height(0), _tileSize(32), _loaded(false) {}
 
@@ -82,7 +83,23 @@ bool Map::loadFromMsg(void) {
   return true;
 }
 
+bool Map::loadShopsWIP(void) {
+  _shops.clear();
+  _shops.push_back(std::make_shared<AmmoShop>(2, 2, 100));
+  return true;
+}
+
 bool Map::isLoaded(void) { return _loaded; }
+
+bool Map::craftMsgShop(void) {
+  for (auto &shop : _shops) {
+    MessageMapShop msg = {shop->getX(), shop->getY(), shop->getPrice(),
+                          shop->getType()};
+    _msgMapShop.push_back(msg);
+  }
+  printf("Map: crafted %lu shop msg\n", _msgMapShop.size());
+  return true;
+}
 
 bool Map::craftMsg(void) {
   int nPack =
@@ -106,12 +123,16 @@ bool Map::craftMsg(void) {
     _msgMap.push_back(msg);
   }
   printf("Map: crafted %lu msg\n", _msgMap.size());
-  return true;
+  return craftMsgShop();
 }
 
 void Map::rcvMsg(MessageMap &msg) {
   printf("Rcv map packet %d/%d\n", msg.idPack + 1, msg.nPack);
   _msgMap.push_back(msg);
+}
+void Map::rcvMsg(MessageMapShop &msg) {
+  _shops.push_back(IShop::createShop(static_cast<ShopType>(msg.type), msg.x,
+                                     msg.y, msg.price));
 }
 
 int Map::countMissingMsg(void) {
@@ -124,6 +145,12 @@ int Map::countMissingMsg(void) {
 void Map::setTileSize(int size) { _tileSize = size; }
 
 std::vector<MessageMap> const &Map::getMsg(void) { return _msgMap; }
+
+std::vector<MessageMapShop> const &Map::getMsgShop(void) { return _msgMapShop; }
+
+std::vector<std::shared_ptr<IShop>> const &Map::getShops(void) const {
+  return _shops;
+}
 
 int Map::getSize(void) const { return _data.size(); }
 
@@ -196,6 +223,23 @@ bool Map::lineOfSight(Entity &entA, Entity &entB, double maxDist) {
   return true;
 }
 
+bool Map::lineOfSight(Vector posA, double angle, Entity &entB, double maxDist) {
+  Vector posB = entB.getPos();
+  double dist = posA.distance(posB);
+  dist = (maxDist == 0.f || dist < maxDist) ? dist : maxDist;
+
+  for (double t = 0; t < dist; t += 1) {
+    Vector ray;
+    ray.x = posA.x + t * cos(angle);
+    ray.y = posA.y + t * sin(angle);
+    if (pointIsColliding(ray.x, ray.y))
+      return false;
+    if (ray.distance(posB) <= entB.getSize())
+      return true;
+  }
+  return true;
+}
+
 std::shared_ptr<Entity> Map::rayCast(Entity &shooter,
                                      EntityManager<Mob> &shooties,
                                      double maxDist, int &hitX, int &hitY) {
@@ -220,4 +264,16 @@ std::shared_ptr<Entity> Map::rayCast(Entity &shooter,
     }
   }
   return nullptr;
+}
+
+bool Map::playerInterract(Player &player) {
+  for (auto shop : _shops) {
+    Vector shopPos(shop->getX() * _tileSize + _tileSize / 2,
+                   shop->getY() * _tileSize + _tileSize / 2);
+    if (player.getPos().distance(shopPos) <= _tileSize) {
+      shop->interact(player);
+      return true;
+    }
+  }
+  return false;
 }

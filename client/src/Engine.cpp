@@ -108,6 +108,12 @@ void Engine::_processInput(SDL_Keycode &sym, bool state) {
       _client.sendMessage(pck);
     }
     break;
+  case SDLK_e:
+    if (_map->playerInterract(*_player)) {
+      MessageBuyShop msg = {_player->getId()};
+      ENetPacket *pck = packageMessage(msg, SHOP_BUY, true);
+      _client.sendMessage(pck);
+    }
   case SDLK_F1:
     std::cout << _player->getPos() << std::endl;
     break;
@@ -168,6 +174,12 @@ void Engine::receiveMsg(MessagePlayerDead *msg) {
   _EMPlayers.get(msg->id)->setAlive(false);
 }
 
+void Engine::receiveMsg(MessagePlayerMoney *msg) {
+  auto player = _EMPlayers.get(msg->id);
+  if (player)
+    player->setMoney(msg->money);
+}
+
 void Engine::receiveMsg(MessageMobHit *msg) {
   auto mob = _EMMobs.get(msg->id);
   if (mob)
@@ -192,6 +204,7 @@ void Engine::receiveMsg(MessageGameState *msg) {
   if (msg->stamp <= lastStamp)
     return;
   lastStamp = msg->stamp;
+  _dm.updateWaveNumber(msg->nwave);
   int i = 0;
   for (; i < msg->nplayer; i++) {
     if (_player && msg->entity[i].id == _player->getId())
@@ -216,4 +229,10 @@ void Engine::receiveMsg(MessageMap *msg) {
       printf("[Map] Loaded successfully\n");
     }
   }
+}
+
+void Engine::receiveMsg(MessageMapShop *msg) {
+  _map->rcvMsg(*msg);
+  _dm.generateShopTiles(*_map);
+  printf("[Map] Loaded shop\n");
 }

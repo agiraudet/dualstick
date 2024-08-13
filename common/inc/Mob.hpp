@@ -18,8 +18,6 @@ public:
   void processDir(Vector aim, int tileSize);
   bool tryHitTarget(void);
   void setVelTowards(Vector target);
-  inline int getTileX(void) const { return _position.x / 32; }
-  inline int getTileY(void) const { return _position.y / 32; }
 
 private:
   void _initWeapon(void);

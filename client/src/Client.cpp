@@ -124,6 +124,12 @@ int Client::_handleReceive(ENetEvent &event, Engine &eng) {
     eng.receiveMsg(static_cast<MessagePlayerID *>(msgBody));
     break;
   }
+  case PLR_MONEY: {
+    if (bodyLen < sizeof(MessagePlayerMoney))
+      return -1;
+    eng.receiveMsg(static_cast<MessagePlayerMoney *>(msgBody));
+    break;
+  }
   case MOB_HIT: {
     if (bodyLen < sizeof(MessageMobHit))
       return -1;
@@ -146,6 +152,12 @@ int Client::_handleReceive(ENetEvent &event, Engine &eng) {
     if (bodyLen < sizeof(MessageMap))
       return -1;
     eng.receiveMsg(static_cast<MessageMap *>(msgBody));
+    break;
+  }
+  case MAP_SHOP: {
+    if (bodyLen < sizeof(MessageMapShop))
+      return -1;
+    eng.receiveMsg(static_cast<MessageMapShop *>(msgBody));
     break;
   }
   default:

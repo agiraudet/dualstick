@@ -8,9 +8,11 @@ INC_DIR         := ./inc $(CMN_DIR)/inc ./inc/ui
 CMN_BUILD_DIR   := $(CMN_DIR)/build
 CMN_SRCS_DIR    := $(CMN_DIR)/src
 CMN_SRCS        := Entity.cpp \
+										InteractiveTile.cpp \
 									 Map.cpp \
 									 Mob.cpp \
 									 Player.cpp \
+										Shop.cpp \
 									 Vector.cpp \
 									 Weapon.cpp
 CMN_OBJS        := $(addprefix $(CMN_BUILD_DIR)/, $(CMN_SRCS:%.cpp=%.o))

@@ -20,6 +20,7 @@ public:
   int damage;
   double range;
   int ammo;
+  int maxAmmo;
   int clip;
   int maxClip;
   std::chrono::milliseconds cd;

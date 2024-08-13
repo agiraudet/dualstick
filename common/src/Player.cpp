@@ -8,12 +8,14 @@
 Player::Player(void) : Entity() {
   _resetInputs();
   weapon = new Weapon();
+  _money = 0;
 }
 
 Player::Player(int id) : Entity() {
   _id = id;
   _resetInputs();
   weapon = new Weapon();
+  _money = 0;
 }
 
 Player::~Player(void) {}
@@ -61,3 +63,17 @@ void Player::applyInput(void) {
   _velocity.capIntensity(_maxSpeed * _maxSpeed);
 }
 #endif // MOVE_ABS
+
+int Player::getMoney(void) const { return _money; }
+
+void Player::addMoney(int money) { _money += money; }
+
+bool Player::removeMoney(int money) {
+  if (_money >= money) {
+    _money -= money;
+    return true;
+  }
+  return false;
+}
+
+void Player::setMoney(int money) { _money = money; }

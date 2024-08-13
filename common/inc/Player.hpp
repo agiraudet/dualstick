@@ -15,12 +15,17 @@ public:
 
   void setInput(PlayerInput input, bool state);
   void applyInput(void);
+  int getMoney(void) const;
+  void addMoney(int money);
+  bool removeMoney(int money);
+  void setMoney(int money);
 
 private:
   void _resetInputs(void);
 
 private:
   bool _inputs[N_INPUT];
+  int _money;
 };
 
 #endif

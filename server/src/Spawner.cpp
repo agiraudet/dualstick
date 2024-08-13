@@ -13,3 +13,5 @@ void ISpawner::setDelay(std::chrono::high_resolution_clock::duration delay) {
 }
 
 void ISpawner::addToSpawn(int n) { _toSpawn += n; }
+
+int ISpawner::leftToSpawn(void) const { return _toSpawn; }

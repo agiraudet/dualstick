@@ -50,6 +50,9 @@ public:
   void capSpeed(int speed);
   void injure(int damage);
 
+  inline int getTileX(void) const { return _position.x / 32; }
+  inline int getTileY(void) const { return _position.y / 32; }
+
 public:
   Weapon *weapon;
 

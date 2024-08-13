@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <thread>
 
+#include "Message.hpp"
 #include "Mob.hpp"
 #include "Player.hpp"
 #include "Server.hpp"
@@ -42,6 +43,7 @@ Server::~Server() {
 void Server::_loadMap(std::string const &path) {
   if (!_map.loadFromFile(path))
     throw std::runtime_error("Failed to load map");
+  _map.loadShopsWIP();
   if (!_map.craftMsg())
     throw std::runtime_error("Failed to craft map msg");
 }
@@ -49,12 +51,11 @@ void Server::_loadMap(std::string const &path) {
 int Server::loadGame(std::string const &mapFile) {
   _loadMap(mapFile);
   _flow.init();
-  WaveManager::WM().addSpawner(_EMMob, Vector(20 * 32 + 16, 4 * 32 + 16));
-  WaveManager::WM().addSpawner(_EMMob, Vector(5 * 32 + 16, 28 * 32 + 16));
-  WaveManager::WM().addSpawner(_EMMob, Vector(26 * 32 + 16, 21 * 32 + 16));
-  WaveManager::WM().newWave(12);
-  WaveManager::WM().setDelayAll(std::chrono::milliseconds(5000));
-  WaveManager::WM().setRunAll(true);
+  _wm.addSpawner(_EMMob, Vector(20 * 32 + 16, 4 * 32 + 16));
+  _wm.addSpawner(_EMMob, Vector(5 * 32 + 16, 28 * 32 + 16));
+  _wm.addSpawner(_EMMob, Vector(26 * 32 + 16, 21 * 32 + 16));
+  _wm.setDelayAll(std::chrono::milliseconds(5000));
+  _wm.setRunAll(true);
   return 0;
 }
 
@@ -97,11 +98,17 @@ void Server::_run() {
 
 void Server::_updateGameState(void) {
   _EMMob.removeDeads();
-  WaveManager::WM().process();
+  if (_wm.allSpwanersEmpty() && _EMMob.empty())
+    _wm.nextWave();
+  _wm.process();
   if (!_EMPlayer.empty()) {
     for (auto &[id, mob] : _EMMob) {
       auto target = mob->findClosest(_EMPlayer);
-      if (target && _map.lineOfSight(*mob, *target)) {
+      // if (target && _map.lineOfSight(*mob, *target)) {
+      Vector leftEye = mob->getPos() - mob->getSize() / 2;
+      Vector rightEye = mob->getPos() + mob->getSize() / 2;
+      if (target && _map.lineOfSight(leftEye, mob->getAngle(), *target) &&
+          _map.lineOfSight(rightEye, mob->getAngle(), *target)) {
         mob->setVelTowards(target->getPos());
       } else {
         mob->processDir(_flow.getDir(mob->getTileX(), mob->getTileY()),
@@ -130,11 +137,17 @@ void Server::_sendMap(int id) {
     printf("[Map] Sent packet %d/%d\n", msg.idPack + 1, msg.nPack);
     _listener.msgOutAdd(id, packet, SINGLE);
   }
+  auto msgMapShop = _map.getMsgShop();
+  for (auto const &msg : msgMapShop) {
+    ENetPacket *packet = packageMessage(msg, MAP_SHOP, true);
+    _listener.msgOutAdd(id, packet, SINGLE);
+  }
 }
 
 void Server::_craftMsgGameState(void) {
   static uint32_t stamp = 0;
   _msgGameState.stamp = stamp++;
+  _msgGameState.nwave = _wm.getWave();
   int nPlayer = MAX_N_PLAYER;
   _EMPlayer.fillMsg(nPlayer, _msgGameState.entity);
   _msgGameState.nplayer = nPlayer;
@@ -184,6 +197,11 @@ void Server::playerShoot(int id) {
       auto hit =
           _map.rayCast(*player, _EMMob, player->weapon->range, hitX, hitY);
       if (hit) {
+        if (!hit->isAlive()) {
+          player->addMoney(10);
+          MessagePlayerMoney msg = {id, player->getMoney()};
+          _listener.msgOutAdd(id, packageMessage(msg, PLR_MONEY, true), SINGLE);
+        }
         MessageMobHit msg = {hit->getId(), hitX, hitY};
         _listener.msgOutAdd(id, packageMessage(msg, MOB_HIT, true), ALL);
       }
@@ -195,4 +213,10 @@ void Server::playerReload(int id) {
   auto player = _EMPlayer.get(id);
   if (player && player->weapon)
     player->weapon->reload();
+}
+
+void Server::playerBuy(int id) {
+  auto player = _EMPlayer.get(id);
+  if (player)
+    _map.playerInterract(*player);
 }

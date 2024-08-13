@@ -1,11 +1,13 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "Entity.hpp"
 #include "Message.hpp"
+#include "Shop.hpp"
 
 class Player;
 class Mob;
@@ -18,11 +20,16 @@ public:
   bool loadFromFile(const std::string &filename);
   bool loadFromMsg(void);
   bool isLoaded(void);
+  bool loadShopsWIP(void);
 
   bool craftMsg(void);
+  bool craftMsgShop(void);
   void rcvMsg(MessageMap &msg);
+  void rcvMsg(MessageMapShop &msg);
   int countMissingMsg(void);
   std::vector<MessageMap> const &getMsg(void);
+  std::vector<MessageMapShop> const &getMsgShop(void);
+  std::vector<std::shared_ptr<IShop>> const &getShops(void) const;
 
   void setTileSize(int size);
   int getSize(void) const;
@@ -36,15 +43,20 @@ public:
   bool boxIsColliding(int x, int y, int w, int h) const;
   bool checkCollision(int tileIndex) const;
   bool lineOfSight(Entity &entA, Entity &entB, double maxDist = 0.f);
+  bool lineOfSight(Vector pos, double angle, Entity &entB,
+                   double maxDist = 0.f);
   std::shared_ptr<Entity> rayCast(Entity &shooter, EntityManager<Mob> &shooties,
                                   double maxDist, int &hitX, int &hitY);
+  bool playerInterract(Player &player);
 
 protected:
   std::vector<int> _parseLine(const std::string &line) const;
 
 protected:
+  std::vector<std::shared_ptr<IShop>> _shops;
   std::vector<std::vector<int>> _data;
   std::vector<MessageMap> _msgMap;
+  std::vector<MessageMapShop> _msgMapShop;
   int _width;
   int _height;
   int _tileSize;

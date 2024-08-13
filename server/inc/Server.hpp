@@ -9,6 +9,7 @@
 #include "Listener.hpp"
 #include "Map.hpp"
 #include "Message.hpp"
+#include "WaveManager.hpp"
 
 enum servStatus { LOADING, READY, RUNNING, STOPPED };
 
@@ -26,6 +27,7 @@ public:
   void playerUpdate(int id, Vector &pos, Vector &vel, float angle);
   void playerShoot(int id);
   void playerReload(int id);
+  void playerBuy(int id);
 
 private:
   void _run();
@@ -46,6 +48,7 @@ private:
   MessageGameState _msgGameState;
   EntityManager<Player> _EMPlayer;
   EntityManager<Mob> _EMMob;
+  WaveManager _wm;
 };
 
 extern Server *g_serverInstance;

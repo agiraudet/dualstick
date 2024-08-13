@@ -21,11 +21,14 @@ enum MessageType {
   PLR_DEAD,
   PLR_SHOOT,
   PLR_RELOAD,
+  PLR_MONEY,
+  SHOP_BUY,
   MOB_UPDATE,
   MOB_HIT,
   MOB_ATTACK,
   GAME_STATE,
-  MAP
+  MAP,
+  MAP_SHOP
 };
 
 struct MessageHeader {
@@ -57,6 +60,15 @@ struct MessagePlayerReload {
   int id;
 };
 
+struct MessagePlayerMoney {
+  int id;
+  int money;
+};
+
+struct MessageBuyShop {
+  int id;
+};
+
 struct MessageMobHit {
   int id;
   int hitX;
@@ -78,6 +90,7 @@ struct MessageEntityUpdate {
 
 struct MessageGameState {
   uint32_t stamp;
+  int nwave;
   int nplayer;
   int nmob;
   MessageEntityUpdate entity[MAX_N_PLAYER + MAX_N_MOB];
@@ -90,6 +103,13 @@ struct MessageMap {
   int tileSize;
   int dataLen;
   int data[MSGMAP_DATALEN];
+};
+
+struct MessageMapShop {
+  int x;
+  int y;
+  int price;
+  int type;
 };
 
 template <typename T>

@@ -224,6 +224,16 @@ void Listener::_handleRecv(ENetEvent &event, Server &serv) {
     serv.playerReload(msgReload->id);
     break;
   }
+  case SHOP_BUY: {
+    if (event.packet->dataLength !=
+        sizeof(MessageHeader) + sizeof(MessageBuyShop)) {
+      std::cerr << "Received SHOP_BUY packet with invalid length" << std::endl;
+      break;
+    }
+    MessageBuyShop *msgBuy =
+        (MessageBuyShop *)(event.packet->data + sizeof(MessageHeader));
+    serv.playerBuy(msgBuy->id);
+  }
   default:
     break;
   }
