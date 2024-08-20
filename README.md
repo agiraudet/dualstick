@@ -1,7 +1,5 @@
 # DualStick
 
-![Screenshot](assets/screenshoot.png)
-
 **DualStick** is a online multiplayer, 2D cooperative shooter game currently in development. Players team up to shoot down waves of increasingly difficult enemies.
 This game is built from scratch using C++ with SDL2 for rendering and ENet for networking.
 
